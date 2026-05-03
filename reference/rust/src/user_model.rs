@@ -14,8 +14,8 @@ pub enum ExpertiseLevel {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunicationProfile {
-    pub verbosity: f32,      // -1.0 to 1.0
-    pub formality: f32,      // -1.0 to 1.0
+    pub verbosity: f32, // -1.0 to 1.0
+    pub formality: f32, // -1.0 to 1.0
     pub prefers_examples: bool,
     pub prefers_explanations: bool,
     #[serde(default)]

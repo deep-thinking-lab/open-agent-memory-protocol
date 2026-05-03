@@ -2,7 +2,13 @@ use oamp_types::*;
 
 #[test]
 fn test_knowledge_entry_roundtrip() {
-    let entry = KnowledgeEntry::new("user-1", KnowledgeCategory::Fact, "Knows Rust", 0.9, "sess-1");
+    let entry = KnowledgeEntry::new(
+        "user-1",
+        KnowledgeCategory::Fact,
+        "Knows Rust",
+        0.9,
+        "sess-1",
+    );
     let json = serde_json::to_string_pretty(&entry).unwrap();
     let parsed: KnowledgeEntry = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.category, KnowledgeCategory::Fact);
@@ -14,7 +20,13 @@ fn test_knowledge_entry_roundtrip() {
 fn test_knowledge_store_roundtrip() {
     let entries = vec![
         KnowledgeEntry::new("user-1", KnowledgeCategory::Fact, "Fact 1", 0.8, "s1"),
-        KnowledgeEntry::new("user-1", KnowledgeCategory::Correction, "Don't do X", 0.95, "s2"),
+        KnowledgeEntry::new(
+            "user-1",
+            KnowledgeCategory::Correction,
+            "Don't do X",
+            0.95,
+            "s2",
+        ),
     ];
     let store = KnowledgeStore::new("user-1", entries);
     let json = serde_json::to_string_pretty(&store).unwrap();
