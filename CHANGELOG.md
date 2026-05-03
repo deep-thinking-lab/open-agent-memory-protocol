@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0-draft] — 2026-05-02
+
+### Added (proposed, draft for community review)
+- **`spec/v1.1/oamp-v1.1-draft.md`** — Strictly additive minor version
+  introducing two OPTIONAL capabilities and a capabilities-discovery
+  endpoint. No breaking changes; v1.0 clients remain wire-compatible.
+- **Capabilities discovery endpoint** (`GET /v1/capabilities`) — lets
+  clients learn which OPTIONAL features a backend supports, replacing
+  vendor-extension sniffing.
+- **Streaming subprotocol** (`oamp.v1` over WebSocket at `/v1/stream`) —
+  push-based delivery of `knowledge_created` / `knowledge_updated` /
+  `knowledge_deleted` / `user_model_updated` / `knowledge_snapshot`
+  events, with subscription filters and at-most-once semantics.
+  Privacy-preserving: `knowledge_deleted` frames carry only the entry
+  id, never the deleted content.
+- **Bitemporal `?as_of=<iso8601>`** query parameter on read endpoints
+  (`/v1/knowledge`, `/v1/knowledge/{id}`, `/v1/user-model/{user_id}`)
+  with response header `OAMP-As-Of` echoing the resolved timestamp and
+  a `min_resolution_ms` advertisement in capabilities. Mutation
+  endpoints reject `as_of` with `400 Bad Request`.
+- **Reference implementation targets:** cosmictron and kizuna-mem are
+  landing both OPTIONAL capabilities concurrently with the draft. They
+  serve as the conformance pressure-test for v1.1; the draft will be
+  revised if either implementation cannot land cleanly.
+
+### Open questions for finalisation
+- Subscription resumption (`since=<event_id>` on `subscribe`) — likely
+  deferred to v2.0.
+- Snapshot pagination — tentative `snapshot_chunk` frame when backends
+  declare a `streaming.snapshot_max_entries` limit.
+- gRPC streaming binding under `/proto/` — pending stabilised JSON
+  shape.
+- `valid_at` (world-time) queries — reserved but not standardised; v1.2
+  or v2.0 work once ≥2 backends ship interoperable implementations.
+
 ## [Unreleased]
 
 ### Added
