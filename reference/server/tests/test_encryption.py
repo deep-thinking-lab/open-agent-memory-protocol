@@ -644,7 +644,7 @@ class TestAuditLog:
             ],
         }
         resp = await audit_client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
 
         resp = await audit_client.get("/v1/admin/audit", params={"user_id": "user-audit-import"})
         logs = resp.json()
@@ -942,7 +942,7 @@ class TestEncryptionTransparency:
             "entries": exported["entries"],
         }
         resp = await trans_client.post("/v1/import", json=import_payload)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 1
 
         # Verify

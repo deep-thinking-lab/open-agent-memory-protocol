@@ -75,7 +75,7 @@ class TestSpecExampleRoundTrips:
         user_id = store["user_id"]
 
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 3
 
         # LIST
@@ -206,7 +206,7 @@ class TestPrePopulatedE2E:
             "entries": exported["entries"],
         }
         resp = await populated_client.post("/v1/import", json=import_payload)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 3
 
         # Verify restored

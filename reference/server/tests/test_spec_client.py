@@ -243,12 +243,13 @@ class TestSpecClientImportExport:
 
         # ── Step 2: Import ──
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200, f"Import failed: {resp.text}"
+        assert resp.status_code == 201, f"Import failed: {resp.text}"
         import_result = resp.json()
         assert import_result["imported"] == entry_count
         assert import_result["user_id"] == user_id
         assert import_result["skipped"] == 0
         assert import_result["rejected"] == 0
+        assert "id_mappings" in import_result
 
         # ── Step 3: List entries — should show all imported ──
         resp = await client.get("/v1/knowledge", params={"user_id": user_id})

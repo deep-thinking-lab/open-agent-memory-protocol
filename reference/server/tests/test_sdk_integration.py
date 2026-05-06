@@ -219,7 +219,7 @@ class TestSDKKnowledgeStoreRoundtrip:
         payload = json.loads(store.model_dump_json())
 
         resp = await client.post("/v1/import", json=payload)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 3
 
     async def test_export_parsed_as_sdk_store(self, client, make_knowledge_entry):

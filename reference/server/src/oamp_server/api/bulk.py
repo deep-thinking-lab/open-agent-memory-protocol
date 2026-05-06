@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from oamp_types import KnowledgeStore
 
@@ -53,15 +54,20 @@ async def import_knowledge(
 ) -> dict[str, Any]:
     """Import a KnowledgeStore, creating all entries.
 
-    Per spec Section 6.4: POST /v1/import with a KnowledgeStore document.
-    Returns a summary of imported, skipped, and rejected entries.
+    Per spec Section 6.4 + Errata A.2: POST /v1/import with a KnowledgeStore document.
+    Returns 201 Created with a summary of imported, skipped, and rejected entries,
+    plus an id_mappings object.
     """
     imported_count = await service.import_store(store)
     # Audit import (spec §8.2.6)
     await request.app.state.repo.log_audit_event("import", store.user_id, detail=f"imported:{imported_count}")
-    return {
-        "imported": imported_count,
-        "skipped": 0,
-        "rejected": 0,
-        "user_id": store.user_id,
-    }
+    return JSONResponse(
+        status_code=201,
+        content={
+            "imported": imported_count,
+            "skipped": 0,
+            "rejected": 0,
+            "id_mappings": {},
+            "user_id": store.user_id,
+        },
+    )

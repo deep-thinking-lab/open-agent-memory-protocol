@@ -342,7 +342,7 @@ def test_no_silent_discard(client: OAMPClient) -> TestResult:
         "entries": [import_entry],
     }
     resp = client.import_data(store)
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 201):
         return TestResult(
             "MUST-11", "No silent discard", TestResult.FAIL,
             f"Import returned {resp.status_code}: {resp.text}",

@@ -120,12 +120,13 @@ class TestImportKnowledge:
         }
 
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()
         assert data["imported"] == 3
         assert data["user_id"] == "user-import"
         assert "skipped" in data
         assert "rejected" in data
+        assert "id_mappings" in data
 
     async def test_import_empty_store(self, client):
         """Import an empty store returns 0."""
@@ -136,7 +137,7 @@ class TestImportKnowledge:
             "entries": [],
         }
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 0
 
     async def test_import_invalid_entry_in_store(self, client):
@@ -194,7 +195,7 @@ class TestImportKnowledge:
         }
 
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 2
 
         resp = await client.post("/v1/export", json={"user_id": "user-rt"})
@@ -212,7 +213,7 @@ class TestImportKnowledge:
 
         store = json.loads(path.read_text())
         resp = await client.post("/v1/import", json=store)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["imported"] == 3
 
         resp = await client.get("/v1/knowledge", params={"user_id": store["user_id"]})

@@ -273,7 +273,7 @@ def test_import(client: OAMPClient) -> TestResult:
     store = make_knowledge_store(user_id=user_id, entries=entries)
 
     resp = client.import_data(store)
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 201):
         return TestResult("FUNC-15", "Import", TestResult.FAIL, str(resp.text))
     data = resp.json()
     if data.get("imported") != 3:
@@ -282,4 +282,7 @@ def test_import(client: OAMPClient) -> TestResult:
     if "skipped" not in data or "rejected" not in data:
         return TestResult("FUNC-15", "Import", TestResult.FAIL,
                           "Import response missing skipped/rejected fields")
+    if "id_mappings" not in data:
+        return TestResult("FUNC-15", "Import", TestResult.FAIL,
+                          "Import response missing id_mappings field")
     return TestResult("FUNC-15", "Import", TestResult.PASS)
