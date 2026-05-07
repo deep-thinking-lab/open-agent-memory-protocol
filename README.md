@@ -16,6 +16,8 @@
 
 Draft extensions: [v1.1](spec/v1.1/oamp-v1.1-draft.md) | [v1.2 governed memory](spec/v1.2/oamp-v1.2-draft.md)
 
+The reference Python, TypeScript, Rust, Go, and Elixir libraries all parse the additive v1.2 governed-memory fields on `KnowledgeEntry` and `KnowledgeStore`.
+
 ---
 
 [中文](docs/README.zh.md) | [한국어](docs/README.ko.md) | [日本語](docs/README.ja.md) | [Bahasa Melayu](docs/README.ms.md)
@@ -337,8 +339,8 @@ We welcome contributions:
 
 1. Read the [spec](spec/v1/oamp-v1.md) before proposing changes
 2. Add test fixtures for schema changes
-3. Update both Rust and TypeScript reference implementations
-4. Include all reference implementations (Rust, TypeScript, Python, Go, Elixir)
+3. Update every affected reference implementation (Rust, TypeScript, Python, Go, Elixir)
+4. Keep the reference server, validator fixtures, and compliance coverage aligned with spec changes
 5. Follow existing code style
 
 ---

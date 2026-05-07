@@ -1,6 +1,6 @@
 # Open Agent Memory Protocol — TypeScript Reference
 
-TypeScript types and validators for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) v1.0.0.
+TypeScript types and validators for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) knowledge documents in v1.0.0, v1.1.0, and the additive v1.2.0 governed-memory draft.
 
 Built on [Zod](https://zod.dev/) schemas for runtime validation with automatic TypeScript type inference.
 
@@ -35,6 +35,14 @@ const json = JSON.stringify(entry);
 ```
 
 The `KnowledgeEntry.parse()` call validates at runtime (via Zod) and returns a typed object. If validation fails, Zod throws a `ZodError` with structured error messages.
+
+## Governed Memory
+
+Knowledge documents also accept the additive v1.2 governed-memory fields:
+- optional `provenance` for multi-source lineage
+- optional `governance` for sensitivity classes, labels, and handling hints
+
+If you are producing governed-memory documents, set `oamp_version` to `"1.2.0"`.
 
 ## User Model Example
 
@@ -80,6 +88,8 @@ const model = UserModel.parse({
 | `content` | `string` | ✅ | Natural language knowledge |
 | `confidence` | `number` | ✅ | 0.0–1.0 |
 | `source` | `KnowledgeSource` | ✅ | Provenance info |
+| `provenance` | `Provenance \| undefined` | ❌ | Extended multi-source lineage |
+| `governance` | `Governance \| undefined` | ❌ | Governed-memory metadata |
 | `decay` | `KnowledgeDecay \| undefined` | ❌ | Temporal decay parameters |
 | `tags` | `string[]` | ❌ | Free-form tags |
 | `metadata` | `Record<string, unknown>` | ❌ | Vendor extensions |
@@ -121,13 +131,14 @@ enum ExpertiseLevel {
 
 All schemas are built with Zod and validate on `parse()`. Validation catches:
 - Required field presence
-- `oamp_version` must be `"1.0.0"`
+- knowledge `oamp_version` must be `"1.0.0"`, `"1.1.0"`, or `"1.2.0"`
 - `type` must match the expected discriminator
 - `confidence` in [0.0, 1.0]
 - UUID v4 format for `id`
 - `verbosity` and `formality` in [-1.0, 1.0]
 - Expertise confidence in [0.0, 1.0]
 - Required `source.session_id`
+- `provenance.sources` must be non-empty when present
 - Unknown fields rejected (`z.object().strict()`)
 
 ```typescript

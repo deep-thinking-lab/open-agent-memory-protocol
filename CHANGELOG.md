@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
   - `spec/v1.2/examples/*`
 - **Validator support for v1.2 documents** via `validators/validate.sh` and
   governed-memory fixtures under `validators/test-fixtures/`.
+- **Reference TypeScript, Rust, Go, and Elixir support for the v1.2 draft path**:
+  - all reference libraries now parse optional `governance` and `provenance`
+  - round-trip tests cover governed-memory example documents across languages
 - **Reference Python + server support for the v1.2 draft path**:
   - Python types now parse optional `governance` and `provenance`
   - reference server preserves governed-memory fields and advertises

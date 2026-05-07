@@ -1,6 +1,6 @@
 # Open Agent Memory Protocol — Rust Reference
 
-Rust types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) v1.0.0.
+Rust types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) knowledge documents in v1.0.0, v1.1.0, and the additive v1.2.0 governed-memory draft.
 
 Built on `serde` for serialization, `chrono` for timestamps, and `uuid` for identifiers.
 
@@ -53,6 +53,14 @@ model.expertise.push(ExpertiseDomain {
 let store = KnowledgeStore::new("user-123", vec![entry]);
 ```
 
+## Governed Memory
+
+`KnowledgeEntry` and `KnowledgeStore` now support the additive v1.2 governed-memory fields:
+- `provenance` for multi-source lineage
+- `governance` for sensitivity classes, labels, and handling hints
+
+Set `entry.oamp_version = "1.2.0".to_string()` when producing governed-memory documents.
+
 ## Types
 
 ### `KnowledgeEntry` — a discrete piece of information about a user
@@ -67,6 +75,8 @@ let store = KnowledgeStore::new("user-123", vec![entry]);
 | `content` | `String` | ✅ | Natural language knowledge |
 | `confidence` | `f32` | ✅ | 0.0–1.0 |
 | `source` | `KnowledgeSource` | ✅ | Provenance info (session_id, agent_id, timestamp) |
+| `provenance` | `Option<Provenance>` | ❌ | Extended multi-source lineage |
+| `governance` | `Option<Governance>` | ❌ | Governed-memory metadata |
 | `decay` | `Option<KnowledgeDecay>` | ❌ | Temporal decay params |
 | `tags` | `Vec<String>` | ❌ | Free-form tags |
 | `metadata` | `serde_json::Map` | ❌ | Vendor extensions |
@@ -140,12 +150,13 @@ match validate::validate_knowledge_entry(&entry) {
 
 Validation checks:
 - Required fields are present
-- `oamp_version` is `"1.0.0"`
+- knowledge `oamp_version` is `"1.0.0"`, `"1.1.0"`, or `"1.2.0"`
 - `type` matches the expected discriminator
 - `confidence` is in `[0.0, 1.0]`
 - Communication profile ranges (`verbosity`, `formality`) are in `[-1.0, 1.0]`
 - Expertise confidence is in `[0.0, 1.0]`
 - Required nested fields (e.g. `source.session_id`)
+- `provenance.sources` is non-empty when present
 
 ## Serialization
 

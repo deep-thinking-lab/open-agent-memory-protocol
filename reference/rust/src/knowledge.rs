@@ -22,6 +22,49 @@ pub struct KnowledgeSource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProvenanceSource {
+    pub session_id: String,
+    pub timestamp: DateTime<Utc>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub turn_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Provenance {
+    pub sources: Vec<ProvenanceSource>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub derived: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GovernanceHandlingMode {
+    Governed,
+    Ungoverned,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GovernanceHandling {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retrieval: Option<GovernanceHandlingMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub export: Option<GovernanceHandlingMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<GovernanceHandlingMode>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Governance {
+    pub sensitivity_class: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub labels: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub handling: Option<GovernanceHandling>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KnowledgeDecay {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub half_life_days: Option<f64>,
@@ -40,6 +83,10 @@ pub struct KnowledgeEntry {
     pub content: String,
     pub confidence: f32,
     pub source: KnowledgeSource,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<Provenance>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub governance: Option<Governance>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decay: Option<KnowledgeDecay>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -69,6 +116,8 @@ impl KnowledgeEntry {
                 agent_id: None,
                 timestamp: Utc::now(),
             },
+            provenance: None,
+            governance: None,
             decay: None,
             tags: Vec::new(),
             metadata: serde_json::Map::new(),

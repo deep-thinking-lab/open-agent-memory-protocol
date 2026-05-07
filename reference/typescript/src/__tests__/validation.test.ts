@@ -44,6 +44,14 @@ describe('KnowledgeEntry validation', () => {
     expect(entry.category).toBe('preference');
     expect(entry.confidence).toBeGreaterThan(0);
   });
+
+  it('parses governed-memory v1.2 example', () => {
+    const json = fs.readFileSync(path.join(__dirname, '../../../../spec/v1.2/examples/knowledge-entry-governed.json'), 'utf-8');
+    const entry = KnowledgeEntry.parse(JSON.parse(json));
+    expect(entry.oamp_version).toBe('1.2.0');
+    expect(entry.governance?.sensitivity_class).toBe('confidential');
+    expect(entry.provenance?.sources[0].turn_id).toBe('turn-3');
+  });
 });
 
 describe('UserModel validation', () => {

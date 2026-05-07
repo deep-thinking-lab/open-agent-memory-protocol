@@ -36,6 +36,45 @@ fn test_knowledge_store_roundtrip() {
 }
 
 #[test]
+fn test_governed_knowledge_entry_roundtrip() {
+    let mut entry = KnowledgeEntry::new(
+        "user-1",
+        KnowledgeCategory::Fact,
+        "User can access finance approvals",
+        0.9,
+        "sess-1",
+    );
+    entry.oamp_version = "1.2.0".to_string();
+    entry.governance = Some(Governance {
+        sensitivity_class: "internal".to_string(),
+        labels: vec!["finance".into(), "ops".into()],
+        handling: Some(GovernanceHandling {
+            retrieval: Some(GovernanceHandlingMode::Governed),
+            export: Some(GovernanceHandlingMode::Governed),
+            stream: None,
+        }),
+    });
+    entry.provenance = Some(Provenance {
+        sources: vec![ProvenanceSource {
+            session_id: "sess-1".to_string(),
+            timestamp: chrono::Utc::now(),
+            agent_id: None,
+            turn_id: Some("turn-1".to_string()),
+        }],
+        derived: Some(false),
+    });
+
+    let json = serde_json::to_string_pretty(&entry).unwrap();
+    let parsed: KnowledgeEntry = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed.oamp_version, "1.2.0");
+    assert_eq!(parsed.governance.unwrap().labels.len(), 2);
+    assert_eq!(
+        parsed.provenance.unwrap().sources[0].turn_id.as_deref(),
+        Some("turn-1")
+    );
+}
+
+#[test]
 fn test_user_model_roundtrip() {
     let mut model = UserModel::new("user-1");
     model.communication = Some(CommunicationProfile {
@@ -99,6 +138,24 @@ fn test_parse_example_knowledge_entry() {
     let entry: KnowledgeEntry = serde_json::from_str(&json).unwrap();
     assert_eq!(entry.category, KnowledgeCategory::Preference);
     assert!(entry.confidence > 0.0 && entry.confidence <= 1.0);
+}
+
+#[test]
+fn test_parse_governed_example_knowledge_entry() {
+    let json =
+        std::fs::read_to_string("../../spec/v1.2/examples/knowledge-entry-governed.json").unwrap();
+    let entry: KnowledgeEntry = serde_json::from_str(&json).unwrap();
+    assert_eq!(entry.oamp_version, "1.2.0");
+    assert_eq!(
+        entry.governance.as_ref().unwrap().sensitivity_class,
+        "confidential"
+    );
+    assert_eq!(
+        entry.provenance.as_ref().unwrap().sources[0]
+            .turn_id
+            .as_deref(),
+        Some("turn-3")
+    );
 }
 
 #[test]

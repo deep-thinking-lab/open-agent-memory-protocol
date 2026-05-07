@@ -8,8 +8,8 @@ import (
 
 func TestKnowledgeCategoryValues(t *testing.T) {
 	categories := map[KnowledgeCategory]bool{
-		KnowledgeCategoryFact:        true,
-		KnowledgeCategoryPreference:  true,
+		KnowledgeCategoryFact:       true,
+		KnowledgeCategoryPreference: true,
 		KnowledgeCategoryPattern:    true,
 		KnowledgeCategoryCorrection: true,
 	}
@@ -84,7 +84,7 @@ func TestKnowledgeEntryRoundTrip(t *testing.T) {
 		Source: KnowledgeSource{
 			SessionID: "sess-001",
 			AgentID:   &agentID,
-			Timestamp:  parseTime("2026-03-15T14:32:00Z"),
+			Timestamp: parseTime("2026-03-15T14:32:00Z"),
 		},
 		Tags:     []string{"communication", "response-style"},
 		Metadata: json.RawMessage("{}"),
@@ -114,6 +114,62 @@ func TestKnowledgeEntryRoundTrip(t *testing.T) {
 	}
 }
 
+func TestGovernedKnowledgeEntryRoundTrip(t *testing.T) {
+	retrieval := "governed"
+	turnID := "turn-1"
+	derived := false
+	entry := &KnowledgeEntry{
+		OAMPVersion: "1.2.0",
+		Type:        "knowledge_entry",
+		ID:          "550e8400-e29b-41d4-a716-446655440100",
+		UserID:      "user-alice-123",
+		Category:    KnowledgeCategoryFact,
+		Content:     "User can review finance approvals",
+		Confidence:  0.9,
+		Source: KnowledgeSource{
+			SessionID: "sess-001",
+			Timestamp: parseTime("2026-05-07T10:00:00Z"),
+		},
+		Provenance: &Provenance{
+			Sources: []ProvenanceSource{
+				{
+					SessionID: "sess-001",
+					Timestamp: parseTime("2026-05-07T10:00:00Z"),
+					TurnID:    &turnID,
+				},
+			},
+			Derived: &derived,
+		},
+		Governance: &Governance{
+			SensitivityClass: "internal",
+			Labels:           []string{"finance", "ops"},
+			Handling: &GovernanceHandling{
+				Retrieval: &retrieval,
+			},
+		},
+	}
+
+	data, err := json.Marshal(entry)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var parsed KnowledgeEntry
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	if parsed.OAMPVersion != "1.2.0" {
+		t.Errorf("OAMPVersion = %q, want %q", parsed.OAMPVersion, "1.2.0")
+	}
+	if parsed.Governance == nil || parsed.Governance.SensitivityClass != "internal" {
+		t.Fatalf("governance was not preserved")
+	}
+	if parsed.Provenance == nil || len(parsed.Provenance.Sources) != 1 {
+		t.Fatalf("provenance was not preserved")
+	}
+}
+
 func TestParseKnowledgeEntryExample(t *testing.T) {
 	data, err := os.ReadFile("../../spec/v1/examples/knowledge-entry.json")
 	if err != nil {
@@ -137,6 +193,24 @@ func TestParseKnowledgeEntryExample(t *testing.T) {
 	errors := ValidateKnowledgeEntry(entry)
 	if len(errors) > 0 {
 		t.Errorf("validation errors: %v", errors)
+	}
+}
+
+func TestParseGovernedKnowledgeEntryExample(t *testing.T) {
+	data, err := os.ReadFile("../../spec/v1.2/examples/knowledge-entry-governed.json")
+	if err != nil {
+		t.Skipf("example file not found: %v", err)
+	}
+
+	entry := MustParseKnowledgeEntry(data)
+	if entry.OAMPVersion != "1.2.0" {
+		t.Errorf("OAMPVersion = %q, want %q", entry.OAMPVersion, "1.2.0")
+	}
+	if entry.Governance == nil || entry.Governance.SensitivityClass != "confidential" {
+		t.Fatalf("governance was not parsed")
+	}
+	if entry.Provenance == nil || len(entry.Provenance.Sources) != 2 {
+		t.Fatalf("provenance was not parsed")
 	}
 }
 

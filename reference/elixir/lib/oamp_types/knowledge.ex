@@ -33,30 +33,91 @@ defmodule OampTypes.Knowledge do
     }
   end
 
+  defmodule GovernanceHandling do
+    @moduledoc """
+    Surface-specific handling hints for governed memory.
+    """
+    defstruct [:retrieval, :export, :stream]
+
+    @type t :: %__MODULE__{
+      retrieval: String.t() | nil,
+      export: String.t() | nil,
+      stream: String.t() | nil
+    }
+  end
+
+  defmodule Governance do
+    @moduledoc """
+    Standard governed-memory metadata.
+    """
+    @enforce_keys [:sensitivity_class]
+    defstruct [:sensitivity_class, labels: [], handling: nil]
+
+    @type t :: %__MODULE__{
+      sensitivity_class: String.t(),
+      labels: [String.t()],
+      handling: GovernanceHandling.t() | nil
+    }
+  end
+
+  defmodule ProvenanceSource do
+    @moduledoc """
+    Extended lineage record for multi-source provenance.
+    """
+    @enforce_keys [:session_id, :timestamp]
+    defstruct [:session_id, :agent_id, :timestamp, :turn_id]
+
+    @type t :: %__MODULE__{
+      session_id: String.t(),
+      agent_id: String.t() | nil,
+      timestamp: String.t(),
+      turn_id: String.t() | nil
+    }
+  end
+
+  defmodule Provenance do
+    @moduledoc """
+    Extended provenance metadata for synthesized or multi-source memories.
+    """
+    @enforce_keys [:sources]
+    defstruct [:derived, sources: []]
+
+    @type t :: %__MODULE__{
+      derived: boolean() | nil,
+      sources: [ProvenanceSource.t()]
+    }
+  end
+
   defmodule Entry do
     @moduledoc """
     A discrete piece of information an agent has learned about a user.
     """
     @enforce_keys [:id, :user_id, :category, :content, :confidence, :source]
     defstruct [
+      :oamp_version,
       :id,
       :user_id,
       :category,
       :content,
       :confidence,
       :source,
+      :provenance,
+      :governance,
       :decay,
       tags: [],
       metadata: %{}
     ]
 
     @type t :: %__MODULE__{
+      oamp_version: String.t() | nil,
       id: String.t(),
       user_id: String.t(),
       category: atom(),
       content: String.t(),
       confidence: float(),
       source: Source.t(),
+      provenance: Provenance.t() | nil,
+      governance: Governance.t() | nil,
       decay: Decay.t() | nil,
       tags: [String.t()],
       metadata: map()
@@ -67,6 +128,7 @@ defmodule OampTypes.Knowledge do
     """
     def new(user_id, category, content, confidence, session_id, opts \\ []) do
       %__MODULE__{
+        oamp_version: Keyword.get(opts, :oamp_version, OampTypes.oamp_version()),
         id: Keyword.get(opts, :id, generate_uuid()),
         user_id: user_id,
         category: category,
@@ -77,6 +139,8 @@ defmodule OampTypes.Knowledge do
           agent_id: Keyword.get(opts, :agent_id),
           timestamp: Keyword.get(opts, :timestamp, DateTime.utc_now() |> DateTime.to_iso8601())
         },
+        provenance: Keyword.get(opts, :provenance),
+        governance: Keyword.get(opts, :governance),
         decay: Keyword.get(opts, :decay),
         tags: Keyword.get(opts, :tags, []),
         metadata: Keyword.get(opts, :metadata, %{})
@@ -125,13 +189,56 @@ defmodule OampTypes.Knowledge do
             }
         end
 
+      provenance =
+        case data["provenance"] do
+          nil -> nil
+          p ->
+            %Provenance{
+              derived: p["derived"],
+              sources:
+                Enum.map(p["sources"], fn source ->
+                  %ProvenanceSource{
+                    session_id: source["session_id"],
+                    agent_id: source["agent_id"],
+                    timestamp: source["timestamp"],
+                    turn_id: source["turn_id"]
+                  }
+                end)
+            }
+        end
+
+      governance =
+        case data["governance"] do
+          nil -> nil
+          g ->
+            handling =
+              case g["handling"] do
+                nil -> nil
+                h ->
+                  %GovernanceHandling{
+                    retrieval: h["retrieval"],
+                    export: h["export"],
+                    stream: h["stream"]
+                  }
+              end
+
+            %Governance{
+              sensitivity_class: g["sensitivity_class"],
+              labels: Map.get(g, "labels", []),
+              handling: handling
+            }
+        end
+
       %__MODULE__{
+        oamp_version: Map.get(data, "oamp_version", OampTypes.oamp_version()),
         id: Map.get(data, "id", generate_uuid()),
         user_id: data["user_id"],
         category: category,
         content: data["content"],
         confidence: data["confidence"],
         source: source,
+        provenance: provenance,
+        governance: governance,
         decay: decay,
         tags: Map.get(data, "tags", []),
         metadata: Map.get(data, "metadata", %{})
@@ -237,7 +344,7 @@ defmodule OampTypes.Knowledge do
   defimpl Jason.Encoder, for: Entry do
     def encode(entry, opts) do
       fields = %{
-        "oamp_version" => OampTypes.oamp_version(),
+        "oamp_version" => entry.oamp_version || OampTypes.oamp_version(),
         "type" => "knowledge_entry",
         "id" => entry.id,
         "user_id" => entry.user_id,
@@ -248,9 +355,51 @@ defmodule OampTypes.Knowledge do
       }
 
       fields = if entry.decay, do: Map.put(fields, "decay", entry.decay), else: fields
+      fields = if entry.provenance, do: Map.put(fields, "provenance", entry.provenance), else: fields
+      fields = if entry.governance, do: Map.put(fields, "governance", entry.governance), else: fields
       fields = if entry.tags != [], do: Map.put(fields, "tags", entry.tags), else: fields
       fields = if entry.metadata != %{}, do: Map.put(fields, "metadata", entry.metadata), else: fields
 
+      Jason.Encode.map(fields, opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: GovernanceHandling do
+    def encode(handling, opts) do
+      fields = %{}
+      fields = if handling.retrieval, do: Map.put(fields, "retrieval", handling.retrieval), else: fields
+      fields = if handling.export, do: Map.put(fields, "export", handling.export), else: fields
+      fields = if handling.stream, do: Map.put(fields, "stream", handling.stream), else: fields
+      Jason.Encode.map(fields, opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: Governance do
+    def encode(governance, opts) do
+      fields = %{"sensitivity_class" => governance.sensitivity_class}
+      fields = if governance.labels != [], do: Map.put(fields, "labels", governance.labels), else: fields
+      fields = if governance.handling, do: Map.put(fields, "handling", governance.handling), else: fields
+      Jason.Encode.map(fields, opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: ProvenanceSource do
+    def encode(source, opts) do
+      fields = %{
+        "session_id" => source.session_id,
+        "timestamp" => source.timestamp
+      }
+
+      fields = if source.agent_id, do: Map.put(fields, "agent_id", source.agent_id), else: fields
+      fields = if source.turn_id, do: Map.put(fields, "turn_id", source.turn_id), else: fields
+      Jason.Encode.map(fields, opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: Provenance do
+    def encode(provenance, opts) do
+      fields = %{"sources" => provenance.sources}
+      fields = if provenance.derived != nil, do: Map.put(fields, "derived", provenance.derived), else: fields
       Jason.Encode.map(fields, opts)
     end
   end
