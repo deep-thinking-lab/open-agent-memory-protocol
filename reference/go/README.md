@@ -1,6 +1,6 @@
 # Open Agent Memory Protocol — Go Reference
 
-Go types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) v1.0.0.
+Go types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) knowledge documents in v1.0.0, v1.1.0, and the additive v1.2.0 governed-memory draft.
 
 ## Installation
 
@@ -57,6 +57,14 @@ func main() {
 }
 ```
 
+## Governed Memory
+
+`KnowledgeEntry` and `KnowledgeStore` accept the additive v1.2 governed-memory fields:
+- `Provenance` for multi-source lineage
+- `Governance` for sensitivity classes, labels, and handling hints
+
+Use `OAMPVersion: "1.2.0"` when producing governed-memory documents.
+
 ## Types
 
 ### `KnowledgeEntry` — a discrete piece of information about a user
@@ -71,6 +79,8 @@ func main() {
 | `Content` | `string` | ✅ | Natural language knowledge |
 | `Confidence` | `float64` | ✅ | 0.0–1.0 |
 | `Source` | `KnowledgeSource` | ✅ | Provenance info |
+| `Provenance` | `*Provenance` | ❌ | Extended multi-source lineage |
+| `Governance` | `*Governance` | ❌ | Governed-memory metadata |
 | `Decay` | `*KnowledgeDecay` | ❌ | Temporal decay params |
 | `Tags` | `[]string` | ❌ | Free-form tags |
 | `Metadata` | `map[string]any` | ❌ | Vendor extensions |
@@ -122,10 +132,12 @@ errors := oamp.ValidateUserModel(model)
 
 An empty slice means valid. Validation checks:
 - Required field presence
+- Knowledge `OAMPVersion` must be `"1.0.0"`, `"1.1.0"`, or `"1.2.0"`
 - `confidence` in [0.0, 1.0]
 - Communication ranges (`verbosity`, `formality`) in [-1.0, 1.0]
 - UUID validity
 - Required nested fields
+- `provenance.sources` must be non-empty when present
 
 ## Serialization
 

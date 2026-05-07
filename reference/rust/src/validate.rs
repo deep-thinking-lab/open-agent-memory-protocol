@@ -1,11 +1,20 @@
 use crate::{KnowledgeEntry, KnowledgeStore, UserModel};
 
+fn is_supported_knowledge_version(version: &str) -> bool {
+    matches!(version, "1.0.0" | "1.1.0" | "1.2.0")
+}
+
 /// Validate a KnowledgeEntry.
 pub fn validate_knowledge_entry(entry: &KnowledgeEntry) -> Result<(), Vec<String>> {
     let mut errors = Vec::new();
 
     if entry.oamp_version.is_empty() {
         errors.push("oamp_version is required".into());
+    } else if !is_supported_knowledge_version(&entry.oamp_version) {
+        errors.push(format!(
+            "oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', got '{}'",
+            entry.oamp_version
+        ));
     }
     if entry.entry_type != "knowledge_entry" {
         errors.push(format!(
@@ -31,6 +40,11 @@ pub fn validate_knowledge_entry(entry: &KnowledgeEntry) -> Result<(), Vec<String
     if entry.source.session_id.is_empty() {
         errors.push("source.session_id is required".into());
     }
+    if let Some(ref provenance) = entry.provenance {
+        if provenance.sources.is_empty() {
+            errors.push("provenance.sources must not be empty".into());
+        }
+    }
 
     if errors.is_empty() {
         Ok(())
@@ -45,6 +59,11 @@ pub fn validate_knowledge_store(store: &KnowledgeStore) -> Result<(), Vec<String
 
     if store.oamp_version.is_empty() {
         errors.push("oamp_version is required".into());
+    } else if !is_supported_knowledge_version(&store.oamp_version) {
+        errors.push(format!(
+            "oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', got '{}'",
+            store.oamp_version
+        ));
     }
     if store.store_type != "knowledge_store" {
         errors.push(format!(

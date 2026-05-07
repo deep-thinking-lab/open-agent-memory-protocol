@@ -16,6 +16,8 @@ import re
 from .knowledge import KnowledgeEntry, KnowledgeStore
 from .user_model import UserModel
 
+SUPPORTED_KNOWLEDGE_VERSIONS = {"1.0.0", "1.1.0", "1.2.0"}
+
 # Loose UUID v4 pattern for validation
 _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
@@ -29,8 +31,11 @@ def validate_knowledge_entry(entry: KnowledgeEntry) -> list[str]:
 
     if not entry.oamp_version:
         errors.append("oamp_version is required")
-    elif entry.oamp_version != "1.0.0":
-        errors.append(f"oamp_version must be '1.0.0', got '{entry.oamp_version}'")
+    elif entry.oamp_version not in SUPPORTED_KNOWLEDGE_VERSIONS:
+        errors.append(
+            "oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', "
+            f"got '{entry.oamp_version}'"
+        )
 
     if entry.type != "knowledge_entry":
         errors.append(f"type must be 'knowledge_entry', got '{entry.type}'")
@@ -52,6 +57,9 @@ def validate_knowledge_entry(entry: KnowledgeEntry) -> list[str]:
     if not entry.source.session_id:
         errors.append("source.session_id is required")
 
+    if entry.provenance is not None and not entry.provenance.sources:
+        errors.append("provenance.sources must not be empty")
+
     return errors
 
 
@@ -61,8 +69,11 @@ def validate_knowledge_store(store: KnowledgeStore) -> list[str]:
 
     if not store.oamp_version:
         errors.append("oamp_version is required")
-    elif store.oamp_version != "1.0.0":
-        errors.append(f"oamp_version must be '1.0.0', got '{store.oamp_version}'")
+    elif store.oamp_version not in SUPPORTED_KNOWLEDGE_VERSIONS:
+        errors.append(
+            "oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', "
+            f"got '{store.oamp_version}'"
+        )
 
     if store.type != "knowledge_store":
         errors.append(f"type must be 'knowledge_store', got '{store.type}'")

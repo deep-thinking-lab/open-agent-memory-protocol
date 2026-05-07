@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .api import admin, bulk, knowledge, user_model
+from .api import admin, bulk, capabilities, knowledge, user_model
 from .api.errors import ErrorResponse, OampError
 from .config import Settings
 from .encryption import LocalKeyProvider
@@ -61,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(user_model.router, prefix="/v1")
     app.include_router(bulk.router, prefix="/v1")
     app.include_router(admin.router, prefix="/v1")
+    app.include_router(capabilities.router, prefix="/v1")
 
     # ── Error handlers ─────────────────────────────────
 

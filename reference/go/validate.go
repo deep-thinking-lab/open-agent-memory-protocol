@@ -9,14 +9,18 @@ import (
 // uuidPattern matches a UUID v4 string.
 var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
 
+func isSupportedKnowledgeVersion(version string) bool {
+	return version == "1.0.0" || version == "1.1.0" || version == "1.2.0"
+}
+
 // ValidateKnowledgeEntry validates a KnowledgeEntry and returns a list of errors.
 func ValidateKnowledgeEntry(e *KnowledgeEntry) []string {
 	var errors []string
 
 	if e.OAMPVersion == "" {
 		errors = append(errors, "oamp_version is required")
-	} else if e.OAMPVersion != OAMPVersion {
-		errors = append(errors, fmt.Sprintf("oamp_version must be %q, got %q", OAMPVersion, e.OAMPVersion))
+	} else if !isSupportedKnowledgeVersion(e.OAMPVersion) {
+		errors = append(errors, fmt.Sprintf("oamp_version must be one of %q, %q, or %q, got %q", "1.0.0", "1.1.0", "1.2.0", e.OAMPVersion))
 	}
 
 	if e.Type != "knowledge_entry" {
@@ -56,6 +60,9 @@ func ValidateKnowledgeEntry(e *KnowledgeEntry) []string {
 	if e.Decay != nil && e.Decay.HalfLifeDays != nil && *e.Decay.HalfLifeDays <= 0 {
 		errors = append(errors, "decay.half_life_days must be positive")
 	}
+	if e.Provenance != nil && len(e.Provenance.Sources) == 0 {
+		errors = append(errors, "provenance.sources must not be empty")
+	}
 
 	return errors
 }
@@ -66,8 +73,8 @@ func ValidateKnowledgeStore(s *KnowledgeStore) []string {
 
 	if s.OAMPVersion == "" {
 		errors = append(errors, "oamp_version is required")
-	} else if s.OAMPVersion != OAMPVersion {
-		errors = append(errors, fmt.Sprintf("oamp_version must be %q, got %q", OAMPVersion, s.OAMPVersion))
+	} else if !isSupportedKnowledgeVersion(s.OAMPVersion) {
+		errors = append(errors, fmt.Sprintf("oamp_version must be one of %q, %q, or %q, got %q", "1.0.0", "1.1.0", "1.2.0", s.OAMPVersion))
 	}
 
 	if s.Type != "knowledge_store" {

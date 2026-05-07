@@ -40,6 +40,14 @@ class TestCreateKnowledge:
         resp = await client.post("/v1/knowledge", json=entry)
         assert resp.status_code == 201
 
+    async def test_create_with_governance_and_provenance(self, client, make_governed_knowledge_entry):
+        entry = make_governed_knowledge_entry()
+        resp = await client.post("/v1/knowledge", json=entry)
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["governance"]["sensitivity_class"] == "internal"
+        assert data["provenance"]["sources"][0]["turn_id"] == "turn-1"
+
     async def test_create_duplicate_id_returns_409(self, client, make_knowledge_entry):
         """Second POST with same ID should return 409 Conflict."""
         entry = make_knowledge_entry(entry_id="d0000001-e29b-41d4-a716-446655440001")
@@ -116,6 +124,16 @@ class TestGetKnowledge:
         data = resp.json()
         assert "source" in data
         assert data["tags"] == ["rust", "safety"]
+
+    async def test_get_roundtrips_governance_and_provenance(self, client, make_governed_knowledge_entry):
+        entry = make_governed_knowledge_entry()
+        await client.post("/v1/knowledge", json=entry)
+
+        resp = await client.get(f"/v1/knowledge/{entry['id']}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["governance"]["labels"] == ["finance", "ops"]
+        assert data["provenance"]["sources"][0]["session_id"] == entry["source"]["session_id"]
 
 
 class TestDeleteKnowledge:
@@ -229,6 +247,23 @@ class TestListKnowledge:
         resp = await client.get("/v1/knowledge", params={"user_id": "user-none"})
         assert resp.status_code == 200
         assert resp.json() == []
+
+    async def test_list_with_governance_filter(self, client, make_knowledge_entry, make_governed_knowledge_entry):
+        governed = make_governed_knowledge_entry(user_id="user-governed", entry_id="a0000001-e29b-41d4-a716-446655440101")
+        plain = make_knowledge_entry(user_id="user-governed", entry_id="a0000002-e29b-41d4-a716-446655440102")
+        resp = await client.post("/v1/knowledge", json=governed)
+        assert resp.status_code == 201
+        resp = await client.post("/v1/knowledge", json=plain)
+        assert resp.status_code == 201
+
+        resp = await client.get(
+            "/v1/knowledge",
+            params={"user_id": "user-governed", "sensitivity_class": "internal"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["id"] == governed["id"]
 
 
 class TestSearchKnowledge:

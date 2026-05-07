@@ -1,7 +1,7 @@
 defmodule OampTypes.KnowledgeTest do
   use ExUnit.Case, async: true
 
-  alias OampTypes.Knowledge.{Entry, Source, Decay, Store}
+  alias OampTypes.Knowledge.{Entry, Source, Decay, Governance, GovernanceHandling, Provenance, ProvenanceSource, Store}
 
   describe "new/5" do
     test "creates a knowledge entry with defaults" do
@@ -52,6 +52,43 @@ defmodule OampTypes.KnowledgeTest do
       assert decoded.decay.half_life_days == 140.0
       assert decoded.tags == ["communication", "response-style"]
     end
+
+    test "encodes and decodes a v1.2 governed knowledge entry" do
+      entry = %Entry{
+        oamp_version: "1.2.0",
+        id: "550e8400-e29b-41d4-a716-446655440100",
+        user_id: "user-alice-123",
+        category: :fact,
+        content: "User can review finance approvals",
+        confidence: 0.9,
+        source: %Source{
+          session_id: "sess-001",
+          timestamp: "2026-05-07T10:00:00Z"
+        },
+        provenance: %Provenance{
+          sources: [
+            %ProvenanceSource{
+              session_id: "sess-001",
+              timestamp: "2026-05-07T10:00:00Z",
+              turn_id: "turn-1"
+            }
+          ],
+          derived: false
+        },
+        governance: %Governance{
+          sensitivity_class: "internal",
+          labels: ["finance", "ops"],
+          handling: %GovernanceHandling{retrieval: "governed"}
+        }
+      }
+
+      json = Entry.to_json(entry)
+      decoded = Entry.from_json(json)
+
+      assert decoded.oamp_version == "1.2.0"
+      assert decoded.governance.sensitivity_class == "internal"
+      assert hd(decoded.provenance.sources).turn_id == "turn-1"
+    end
   end
 
   describe "spec example parsing" do
@@ -84,6 +121,17 @@ defmodule OampTypes.KnowledgeTest do
 
         errors = OampTypes.Validate.validate_knowledge_store(store)
         assert errors == []
+      end
+    end
+
+    test "parses governed knowledge-entry.json from spec examples" do
+      path = Path.join([__DIR__, "..", "..", "spec", "v1.2", "examples", "knowledge-entry-governed.json"])
+
+      if File.exists?(path) do
+        entry = Entry.from_json(File.read!(path))
+        assert entry.oamp_version == "1.2.0"
+        assert entry.governance.sensitivity_class == "confidential"
+        assert length(entry.provenance.sources) == 2
       end
     end
   end

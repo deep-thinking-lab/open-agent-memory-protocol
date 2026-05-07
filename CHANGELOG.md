@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0-draft] — 2026-05-07
+
+### Added (proposed, draft for community review)
+- **`spec/v1.2/oamp-v1.2-governed-memory-draft.md`** — design rationale for
+  governed-memory standardization across OAMP backends used by `cosmictron`,
+  `kizuna-mem`, `ultra`, and `toraeru`.
+- **`spec/v1.2/oamp-v1.2-draft.md`** — normative draft that ratifies the
+  working split: v1.2 standardizes additive governance metadata, richer
+  provenance, and discovery/filter semantics, while withheld/redacted result
+  documents are explicitly deferred to a separate v2.0 design track.
+- **Concrete v1.2 contract artifacts**:
+  - `spec/v1.2/knowledge-entry.schema.json`
+  - `spec/v1.2/knowledge-store.schema.json`
+  - `spec/v1.2/openapi.yaml`
+  - `spec/v1.2/examples/*`
+- **Validator support for v1.2 documents** via `validators/validate.sh` and
+  governed-memory fixtures under `validators/test-fixtures/`.
+- **Reference TypeScript, Rust, Go, and Elixir support for the v1.2 draft path**:
+  - all reference libraries now parse optional `governance` and `provenance`
+  - round-trip tests cover governed-memory example documents across languages
+- **Reference Python + server support for the v1.2 draft path**:
+  - Python types now parse optional `governance` and `provenance`
+  - reference server preserves governed-memory fields and advertises
+    `/v1/capabilities`
+  - governance-aware list/search filter keys are wired in the reference server
+- **Compliance and interop follow-up artifacts**:
+  - `spec/v2.0/oamp-v2.0-withheld-results-rfc.md`
+  - `docs/governed-memory-interop-matrix.md`
+  - canonical interop fixture pack under `spec/v1.2/examples/` and `validators/test-fixtures/valid/`
+
+### Proposed scope
+- Optional `governance` field on `KnowledgeEntry`
+- Optional extended `provenance` field for multi-source lineage
+- Capabilities advertisement for governance support
+- Optional governance-aware filter keys
+
+### Explicitly deferred
+- Standard `withholding_reason`
+- Standard redacted/withheld result documents
+- Standard stream-level withheld event semantics
+- Cross-backend authorization policy language
+
 ## [1.1.0-draft] — 2026-05-02
 
 ### Added (proposed, draft for community review)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from oamp_types import KnowledgeEntry
 
 from ..api.errors import OampError, duplicate_id, not_found, validation_error, forbidden_patch
@@ -43,6 +43,8 @@ async def list_or_search_knowledge(
     user_id: str,
     query: Optional[str] = None,
     category: Optional[str] = None,
+    sensitivity_class: list[str] | None = Query(default=None),
+    governance_label: list[str] | None = Query(default=None),
     limit: int = 50,
     offset: int = 0,
     service: KnowledgeService = Depends(_get_service),
@@ -60,9 +62,19 @@ async def list_or_search_knowledge(
     offset = max(0, offset)
 
     if query:
-        entries = await service.search(query, user_id, category, limit, offset)
+        entries = await service.search(
+            query, user_id, category,
+            sensitivity_classes=sensitivity_class,
+            governance_labels=governance_label,
+            limit=limit, offset=offset,
+        )
     else:
-        entries = await service.list_entries(user_id, category, limit, offset)
+        entries = await service.list_entries(
+            user_id, category,
+            sensitivity_classes=sensitivity_class,
+            governance_labels=governance_label,
+            limit=limit, offset=offset,
+        )
 
     return [e.model_dump(mode="json", exclude_none=True) for e in entries]
 

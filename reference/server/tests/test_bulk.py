@@ -205,6 +205,25 @@ class TestImportKnowledge:
         exported_ids = {e["id"] for e in exported["entries"]}
         assert exported_ids == {uuids[0], uuids[1]}
 
+    async def test_import_export_roundtrip_preserves_governance(self, client, make_governed_knowledge_entry):
+        entry = make_governed_knowledge_entry(user_id="user-governed-rt", entry_id="f0000001-e29b-41d4-a716-446655440001")
+        store = {
+            "oamp_version": "1.2.0",
+            "type": "knowledge_store",
+            "user_id": "user-governed-rt",
+            "entries": [entry],
+        }
+
+        resp = await client.post("/v1/import", json=store)
+        assert resp.status_code == 201
+
+        resp = await client.post("/v1/export", json={"user_id": "user-governed-rt"})
+        assert resp.status_code == 200
+        exported = resp.json()
+        assert exported["oamp_version"] == "1.2.0"
+        assert exported["entries"][0]["governance"]["sensitivity_class"] == "internal"
+        assert exported["entries"][0]["provenance"]["sources"][0]["turn_id"] == "turn-1"
+
     async def test_import_spec_knowledge_store_example(self, client):
         """Import the spec example knowledge-store.json."""
         path = SPEC_EXAMPLES / "knowledge-store.json"

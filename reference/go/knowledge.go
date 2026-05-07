@@ -14,16 +14,16 @@ type KnowledgeCategory string
 const (
 	KnowledgeCategoryFact       KnowledgeCategory = "fact"
 	KnowledgeCategoryPreference KnowledgeCategory = "preference"
-	KnowledgeCategoryPattern   KnowledgeCategory = "pattern"
+	KnowledgeCategoryPattern    KnowledgeCategory = "pattern"
 	KnowledgeCategoryCorrection KnowledgeCategory = "correction"
 )
 
 // ValidKnowledgeCategories is the set of valid knowledge categories.
 var ValidKnowledgeCategories = map[KnowledgeCategory]bool{
-	KnowledgeCategoryFact:        true,
-	KnowledgeCategoryPreference:  true,
-	KnowledgeCategoryPattern:     true,
-	KnowledgeCategoryCorrection:  true,
+	KnowledgeCategoryFact:       true,
+	KnowledgeCategoryPreference: true,
+	KnowledgeCategoryPattern:    true,
+	KnowledgeCategoryCorrection: true,
 }
 
 // KnowledgeSource records the provenance of a knowledge entry.
@@ -31,6 +31,30 @@ type KnowledgeSource struct {
 	SessionID string    `json:"session_id"`
 	AgentID   *string   `json:"agent_id,omitempty"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+type ProvenanceSource struct {
+	SessionID string    `json:"session_id"`
+	AgentID   *string   `json:"agent_id,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	TurnID    *string   `json:"turn_id,omitempty"`
+}
+
+type Provenance struct {
+	Sources []ProvenanceSource `json:"sources"`
+	Derived *bool              `json:"derived,omitempty"`
+}
+
+type GovernanceHandling struct {
+	Retrieval *string `json:"retrieval,omitempty"`
+	Export    *string `json:"export,omitempty"`
+	Stream    *string `json:"stream,omitempty"`
+}
+
+type Governance struct {
+	SensitivityClass string              `json:"sensitivity_class"`
+	Labels           []string            `json:"labels,omitempty"`
+	Handling         *GovernanceHandling `json:"handling,omitempty"`
 }
 
 // KnowledgeDecay holds temporal decay parameters for confidence.
@@ -49,6 +73,8 @@ type KnowledgeEntry struct {
 	Content     string            `json:"content"`
 	Confidence  float64           `json:"confidence"`
 	Source      KnowledgeSource   `json:"source"`
+	Provenance  *Provenance       `json:"provenance,omitempty"`
+	Governance  *Governance       `json:"governance,omitempty"`
 	Decay       *KnowledgeDecay   `json:"decay,omitempty"`
 	Tags        []string          `json:"tags,omitempty"`
 	Metadata    json.RawMessage   `json:"metadata,omitempty"`
@@ -75,12 +101,12 @@ func NewKnowledgeEntry(userID string, category KnowledgeCategory, content string
 
 // KnowledgeStore is a collection document for bulk export and import.
 type KnowledgeStore struct {
-	OAMPVersion string            `json:"oamp_version"`
-	Type        string            `json:"type"`
-	UserID      string            `json:"user_id"`
-	Entries     []KnowledgeEntry  `json:"entries"`
-	ExportedAt  time.Time         `json:"exported_at"`
-	AgentID     *string           `json:"agent_id,omitempty"`
+	OAMPVersion string           `json:"oamp_version"`
+	Type        string           `json:"type"`
+	UserID      string           `json:"user_id"`
+	Entries     []KnowledgeEntry `json:"entries"`
+	ExportedAt  time.Time        `json:"exported_at"`
+	AgentID     *string          `json:"agent_id,omitempty"`
 }
 
 // NewKnowledgeStore creates a new knowledge store.

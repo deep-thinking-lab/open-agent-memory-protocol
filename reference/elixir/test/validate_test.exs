@@ -2,7 +2,7 @@ defmodule OampTypes.ValidateTest do
   use ExUnit.Case, async: true
 
   alias OampTypes.Validate
-  alias OampTypes.Knowledge.{Entry, Source}
+  alias OampTypes.Knowledge.{Entry, Provenance, Source}
   alias OampTypes.UserModel.{Model, CommunicationProfile, ExpertiseDomain}
 
   describe "validate_knowledge_entry/1" do
@@ -59,6 +59,22 @@ defmodule OampTypes.ValidateTest do
 
       errors = Validate.validate_knowledge_entry(entry)
       assert length(errors) > 0
+    end
+
+    test "empty provenance sources produces error" do
+      entry = %Entry{
+        oamp_version: "1.2.0",
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        user_id: "user-1",
+        category: :fact,
+        content: "test",
+        confidence: 0.8,
+        source: %Source{session_id: "sess-1", timestamp: "2026-03-15T14:32:00Z"},
+        provenance: %Provenance{sources: []}
+      }
+
+      errors = Validate.validate_knowledge_entry(entry)
+      assert "provenance.sources must not be empty" in errors
     end
   end
 

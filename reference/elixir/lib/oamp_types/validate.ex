@@ -41,6 +41,9 @@ defmodule OampTypes.Validate do
     errors = if entry.source == nil or entry.source.session_id == nil or entry.source.session_id == "",
       do: ["source.session_id is required" | errors], else: errors
 
+    errors = if entry.provenance != nil and entry.provenance.sources == [],
+      do: ["provenance.sources must not be empty" | errors], else: errors
+
     Enum.reverse(errors)
   end
 

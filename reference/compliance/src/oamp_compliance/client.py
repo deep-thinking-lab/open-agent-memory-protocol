@@ -48,6 +48,8 @@ class OAMPClient:
         user_id: str,
         query: str | None = None,
         category: str | None = None,
+        sensitivity_class: list[str] | None = None,
+        governance_label: list[str] | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> httpx.Response:
@@ -57,6 +59,10 @@ class OAMPClient:
             params["query"] = query
         if category is not None:
             params["category"] = category
+        if sensitivity_class is not None:
+            params["sensitivity_class"] = sensitivity_class
+        if governance_label is not None:
+            params["governance_label"] = governance_label
         return self._client.get("/v1/knowledge", params=params)
 
     def update_knowledge(self, entry_id: str, updates: dict[str, Any]) -> httpx.Response:
@@ -114,3 +120,7 @@ class OAMPClient:
     def health_check(self) -> httpx.Response:
         """GET /health — Health check."""
         return self._client.get("/health")
+
+    def get_capabilities(self) -> httpx.Response:
+        """GET /v1/capabilities — Discover optional backend capabilities."""
+        return self._client.get("/v1/capabilities")
