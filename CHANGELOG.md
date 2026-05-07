@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - **Compliance and interop follow-up artifacts**:
   - `spec/v2.0/oamp-v2.0-withheld-results-rfc.md`
   - `docs/governed-memory-interop-matrix.md`
+  - canonical interop fixture pack under `spec/v1.2/examples/` and `validators/test-fixtures/valid/`
 
 ### Proposed scope
 - Optional `governance` field on `KnowledgeEntry`

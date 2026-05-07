@@ -1,0 +1,29 @@
+{
+  "oamp_version": "1.2.0",
+  "type": "knowledge_entry",
+  "id": "550e8400-e29b-41d4-a716-446655440101",
+  "user_id": "user-alice-123",
+  "category": "pattern",
+  "content": "User usually batches payroll and vendor review tasks into a single Friday workflow.",
+  "confidence": 0.82,
+  "source": {
+    "session_id": "sess-2026-05-08-001",
+    "agent_id": "ultra-v1",
+    "timestamp": "2026-05-08T09:00:00Z"
+  },
+  "provenance": {
+    "sources": [
+      {
+        "session_id": "sess-2026-05-08-001",
+        "agent_id": "ultra-v1",
+        "timestamp": "2026-05-08T09:00:00Z",
+        "turn_id": "turn-5"
+      }
+    ],
+    "derived": false
+  },
+  "tags": ["workflow", "finance"],
+  "metadata": {
+    "vendor_hint": "portable-provenance-example"
+  }
+}
