@@ -44,9 +44,13 @@ class KnowledgeService:
         - decay (specifically decay.last_confirmed)
         - tags
 
-        Fields id, user_id, category, source, content, oamp_version, type are forbidden.
+        Fields id, user_id, category, source, provenance, governance, content,
+        oamp_version, and type are forbidden.
         """
-        forbidden = {"id", "user_id", "category", "source", "oamp_version", "type", "content"}
+        forbidden = {
+            "id", "user_id", "category", "source", "provenance",
+            "governance", "oamp_version", "type", "content",
+        }
         for field in updates:
             if field in forbidden:
                 raise forbidden_patch(field)
@@ -60,22 +64,28 @@ class KnowledgeService:
         self,
         user_id: str,
         category: Optional[str] = None,
+        sensitivity_classes: Optional[list[str]] = None,
+        governance_labels: Optional[list[str]] = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[KnowledgeEntry]:
         """List knowledge entries for a user."""
-        return await self.repo.list_knowledge(user_id, category, limit, offset)
+        entries = await self.repo.list_knowledge(user_id, category, limit=10000, offset=0)
+        return self._apply_governance_filters(entries, sensitivity_classes, governance_labels, limit, offset)
 
     async def search(
         self,
         query: str,
         user_id: str,
         category: Optional[str] = None,
+        sensitivity_classes: Optional[list[str]] = None,
+        governance_labels: Optional[list[str]] = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[KnowledgeEntry]:
         """Search knowledge entries by text query."""
-        return await self.repo.search_knowledge(query, user_id, category, limit, offset)
+        entries = await self.repo.search_knowledge(query, user_id, category, limit=10000, offset=0)
+        return self._apply_governance_filters(entries, sensitivity_classes, governance_labels, limit, offset)
 
     async def export_user(
         self,
@@ -94,8 +104,13 @@ class KnowledgeService:
 
         entries = await self.repo.list_knowledge(user_id, limit=10000)
 
+        store_version = "1.2.0" if any(
+            entry.governance is not None or entry.provenance is not None
+            for entry in entries
+        ) else "1.0.0"
+
         result: dict[str, Any] = {
-            "oamp_version": "1.0.0",
+            "oamp_version": store_version,
             "type": "knowledge_store",
             "user_id": user_id,
             "entries": [e.model_dump(mode="json", exclude_none=True) for e in entries],
@@ -125,3 +140,32 @@ class KnowledgeService:
             await self.repo.create_knowledge(entry)
             count += 1
         return count
+
+    @staticmethod
+    def _apply_governance_filters(
+        entries: list[KnowledgeEntry],
+        sensitivity_classes: Optional[list[str]],
+        governance_labels: Optional[list[str]],
+        limit: int,
+        offset: int,
+    ) -> list[KnowledgeEntry]:
+        """Filter entries by optional governance metadata, then paginate."""
+        filtered = entries
+
+        if sensitivity_classes:
+            allowed = set(sensitivity_classes)
+            filtered = [
+                entry for entry in filtered
+                if entry.governance is not None
+                and entry.governance.sensitivity_class in allowed
+            ]
+
+        if governance_labels:
+            requested = set(governance_labels)
+            filtered = [
+                entry for entry in filtered
+                if entry.governance is not None
+                and requested.intersection(entry.governance.labels)
+            ]
+
+        return filtered[offset:offset + limit]

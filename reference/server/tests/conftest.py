@@ -86,6 +86,36 @@ def make_knowledge_entry():
 
 
 @pytest.fixture
+def make_governed_knowledge_entry(make_knowledge_entry):
+    """Factory fixture to create v1.2 knowledge entries with governance metadata."""
+
+    def _make(**kwargs) -> dict:
+        entry = make_knowledge_entry(**kwargs)
+        entry["oamp_version"] = "1.2.0"
+        entry["provenance"] = {
+            "sources": [
+                {
+                    "session_id": entry["source"]["session_id"],
+                    "timestamp": entry["source"]["timestamp"],
+                    "turn_id": "turn-1",
+                }
+            ],
+            "derived": False,
+        }
+        entry["governance"] = {
+            "sensitivity_class": "internal",
+            "labels": ["finance", "ops"],
+            "handling": {
+                "retrieval": "governed",
+                "export": "governed",
+            },
+        }
+        return entry
+
+    return _make
+
+
+@pytest.fixture
 def make_user_model():
     """Factory fixture to create user model dicts."""
 

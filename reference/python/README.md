@@ -1,8 +1,12 @@
 # oamp-types
 
-Python types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) v1.0.0.
+Python types for the [Open Agent Memory Protocol (OAMP)](https://github.com/deep-thinking-llc/open-agent-memory-protocol) v1.x.
 
 Built on [Pydantic v2](https://docs.pydantic.dev/) for validation and serialization.
+
+The current reference package preserves the stable v1.0 document model and also
+parses additive `v1.1.0` / `v1.2.0` knowledge documents, including optional
+governance and extended provenance fields introduced by the `v1.2` draft.
 
 ## Install
 
@@ -13,10 +17,15 @@ pip install oamp-types
 ## Quick Start
 
 ```python
+from datetime import datetime, timezone
+
 from oamp_types import (
     KnowledgeEntry,
     KnowledgeCategory,
     KnowledgeSource,
+    Governance,
+    Provenance,
+    ProvenanceSource,
     KnowledgeStore,
     UserModel,
     CommunicationProfile,
@@ -67,6 +76,29 @@ model.expertise.append(
 
 # Bulk export
 store = KnowledgeStore(user_id="user-123", entries=[entry])
+
+# v1.2 governed memory
+governed = KnowledgeEntry(
+    oamp_version="1.2.0",
+    user_id="user-123",
+    category=KnowledgeCategory.fact,
+    content="User can review finance approvals.",
+    confidence=0.92,
+    source=KnowledgeSource(session_id="session-42"),
+    governance=Governance(
+        sensitivity_class="internal",
+        labels=["finance"],
+    ),
+    provenance=Provenance(
+        sources=[
+            ProvenanceSource(
+                session_id="session-42",
+                timestamp=datetime.now(timezone.utc),
+                turn_id="turn-7",
+            )
+        ]
+    ),
+)
 ```
 
 ## Serialization
@@ -97,6 +129,7 @@ Two levels of validation are provided:
 Creating or parsing models through Pydantic automatically validates:
 - Required fields must be present
 - `oamp_version` must be `"1.0.0"`
+- knowledge documents may also use `"1.1.0"` or `"1.2.0"`
 - `type` must match the expected document type
 - `confidence` must be in [0.0, 1.0]
 - String fields must not be empty where required
@@ -132,6 +165,8 @@ field validators were bypassed.
 | `content` | `str` | ✅ | Natural language knowledge |
 | `confidence` | `float` | ✅ | 0.0–1.0 |
 | `source` | `KnowledgeSource` | ✅ | Provenance info |
+| `provenance` | `Provenance \| None` | ❌ | Extended multi-source lineage |
+| `governance` | `Governance \| None` | ❌ | Governed-memory metadata |
 | `decay` | `KnowledgeDecay \| None` | ❌ | Temporal decay params |
 | `tags` | `list[str]` | ❌ | Free-form tags |
 | `metadata` | `dict[str, Any]` | ❌ | Vendor extensions |

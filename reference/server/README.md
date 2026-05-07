@@ -12,6 +12,9 @@ FastAPI-based reference implementation of the Open Agent Memory Protocol backend
 - **FTS5 full-text search** with Porter stemming for knowledge entry queries
 - **Version conflict detection** for User Model updates (monotonic `model_version`)
 - **Bulk export/import** via `KnowledgeStore` format
+- **v1.2 governed-memory draft support** — optional `governance`,
+  extended `provenance`, capabilities discovery, and governance-aware
+  list/search filters
 - **OpenAPI/Swagger UI** auto-generated at `/docs`
 - **JSON error responses** per spec Section 6.8
 
@@ -58,6 +61,12 @@ PYTHONPATH=src pytest tests/ -v
 | `POST` | `/v1/export` | Export all knowledge as KnowledgeStore (includes UserModel in metadata) |
 | `POST` | `/v1/import` | Import a KnowledgeStore |
 
+### Capabilities
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/v1/capabilities` | Advertise optional governance support and filter keys |
+
 ### Admin
 
 | Method | Endpoint | Description |
@@ -79,7 +88,7 @@ All PII and knowledge content is encrypted at rest using AES-256-GCM. The schema
 
 **Knowledge entries:**
 - Plaintext: `id`, `user_id`, `category`, `confidence`, `oamp_version`, `type`, timestamps
-- Encrypted: `content_enc`, `source_enc`, `decay_enc`, `tags_enc`, `metadata_enc`
+- Encrypted: `content_enc`, `source_enc`, `provenance_enc`, `governance_enc`, `decay_enc`, `tags_enc`, `metadata_enc`
 
 **User models:**
 - Plaintext: `user_id`, `model_version`, `oamp_version`, `type`, timestamps
@@ -139,14 +148,15 @@ src/oamp_server/
     └── audit.py           # Audit logging (spec §8.2.6)
 ```
 
-## Test Suite (133 tests)
+## Test Suite
 
 - **Knowledge CRUD** (20): create with all optionals, duplicate 409, get, delete + 204 empty body, list, pagination, category filter
 - **FTS5 search** (6): Porter stemming, multi-word, case-insensitive, scoped, category filter, pagination, negative limit
 - **User model CRUD** (12): 201 on create, 200 on update, version monotonicity (409), model_version >= 1, delete + remove knowledge
 - **Validation & PATCH** (15): error format (Section 6.8), forbidden PATCH fields (id/user/category/source/content), duplicate ID 409, version conflict 409, 404 handling
-- **Bulk export/import** (9): POST /v1/export, POST /v1/import, UserModel in metadata, skipped/rejected counts, spec examples
-- **Health & spec round-trips** (14): health check, spec JSON files validated through API, pre-populated E2E scenarios, export/import cycle
+- **Bulk export/import**: POST /v1/export, POST /v1/import, UserModel in metadata, skipped/rejected counts, governed-memory round-trips, spec examples
+- **Capabilities**: `/v1/capabilities` advertisement for governed-memory support
+- **Health & spec round-trips**: health check, spec JSON files validated through API, pre-populated E2E scenarios, export/import cycle
 - **SDK integration** (10): KnowledgeEntry round-trips (all categories, all optionals), UserModel round-trips (all expertise levels), KnowledgeStore import/export, validation alignment
 - **Encryption module** (11): encrypt/decrypt roundtrip, ciphertext verification, nonce uniqueness, AAD mismatch, key rotation, LocalKeyProvider
 - **Stored data ciphertext** (3): DB query shows encrypted content, encrypted user model, plaintext fields queryable

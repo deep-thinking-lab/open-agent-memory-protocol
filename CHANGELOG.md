@@ -19,6 +19,14 @@ All notable changes to this project will be documented in this file.
   - `spec/v1.2/examples/*`
 - **Validator support for v1.2 documents** via `validators/validate.sh` and
   governed-memory fixtures under `validators/test-fixtures/`.
+- **Reference Python + server support for the v1.2 draft path**:
+  - Python types now parse optional `governance` and `provenance`
+  - reference server preserves governed-memory fields and advertises
+    `/v1/capabilities`
+  - governance-aware list/search filter keys are wired in the reference server
+- **Compliance and interop follow-up artifacts**:
+  - `spec/v2.0/oamp-v2.0-withheld-results-rfc.md`
+  - `docs/governed-memory-interop-matrix.md`
 
 ### Proposed scope
 - Optional `governance` field on `KnowledgeEntry`

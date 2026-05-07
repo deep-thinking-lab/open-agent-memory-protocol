@@ -1,10 +1,10 @@
-"""Knowledge entry and store types for OAMP v1."""
+"""Knowledge entry and store types for OAMP v1.x."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -55,6 +55,60 @@ class KnowledgeDecay(BaseModel):
         return v
 
 
+class GovernanceHandling(BaseModel):
+    """Surface-specific handling hints for governed memory."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    retrieval: Optional[Literal["governed", "ungoverned"]] = None
+    export: Optional[Literal["governed", "ungoverned"]] = None
+    stream: Optional[Literal["governed", "ungoverned"]] = None
+
+
+class Governance(BaseModel):
+    """Standard governed-memory metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sensitivity_class: Literal["public", "internal", "confidential", "restricted"]
+    labels: list[str] = Field(default_factory=list)
+    handling: Optional[GovernanceHandling] = None
+
+
+class ProvenanceSource(BaseModel):
+    """Extended lineage record for multi-source provenance."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+    timestamp: datetime
+    agent_id: Optional[str] = None
+    turn_id: Optional[str] = None
+
+    @field_validator("session_id")
+    @classmethod
+    def session_id_not_empty(cls, v: str) -> str:
+        if not v:
+            raise ValueError("provenance.sources[].session_id must not be empty")
+        return v
+
+
+class Provenance(BaseModel):
+    """Extended provenance metadata for synthesized or multi-source memories."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sources: list[ProvenanceSource]
+    derived: Optional[bool] = None
+
+    @field_validator("sources")
+    @classmethod
+    def sources_not_empty(cls, v: list[ProvenanceSource]) -> list[ProvenanceSource]:
+        if not v:
+            raise ValueError("provenance.sources must not be empty")
+        return v
+
+
 class KnowledgeEntry(BaseModel):
     """A discrete piece of information an agent has learned about a user."""
 
@@ -68,6 +122,8 @@ class KnowledgeEntry(BaseModel):
     content: str
     confidence: float
     source: KnowledgeSource
+    provenance: Optional[Provenance] = None
+    governance: Optional[Governance] = None
     decay: Optional[KnowledgeDecay] = None
     tags: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -75,8 +131,8 @@ class KnowledgeEntry(BaseModel):
     @field_validator("oamp_version")
     @classmethod
     def oamp_version_must_be_current(cls, v: str) -> str:
-        if v != "1.0.0":
-            raise ValueError(f"oamp_version must be '1.0.0', got '{v}'")
+        if v not in {"1.0.0", "1.1.0", "1.2.0"}:
+            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', got '{v}'")
         return v
 
     @field_validator("type")
@@ -123,8 +179,8 @@ class KnowledgeStore(BaseModel):
     @field_validator("oamp_version")
     @classmethod
     def oamp_version_must_be_current(cls, v: str) -> str:
-        if v != "1.0.0":
-            raise ValueError(f"oamp_version must be '1.0.0', got '{v}'")
+        if v not in {"1.0.0", "1.1.0", "1.2.0"}:
+            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', or '1.2.0', got '{v}'")
         return v
 
     @field_validator("type")

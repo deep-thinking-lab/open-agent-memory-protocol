@@ -4,6 +4,13 @@ Automated test suite that verifies whether a backend implementation conforms to
 the OAMP v1 specification. Point it at any running OAMP server and get a
 compliance report.
 
+The suite now also includes additive `v1.2` governed-memory coverage for:
+
+- creating entries with standardized `governance`
+- creating entries with extended `provenance`
+- governance-aware filtering
+- `/v1/capabilities` governance advertisement
+
 ## Quick Start
 
 ```bash
@@ -60,7 +67,7 @@ Recommended. Failing = compliant but not ideal.
 | SHOULD-02 | Key rotation | Rotate key, verify old data still readable |
 | SHOULD-03 | Confidence decay | Requires time-travel simulation (skip) |
 
-### Functional Tests (15 tests) — spec §6
+### Functional Tests (18 tests) — spec §6
 
 Every endpoint exercised.
 
@@ -68,10 +75,12 @@ Every endpoint exercised.
 |----|----------|-------------|
 | FUNC-01 | POST /v1/knowledge | Create valid entry, expect 201 |
 | FUNC-02 | POST /v1/knowledge | Create with metadata, expect 201 |
+| FUNC-02B | POST /v1/knowledge | Create with governance/provenance, expect 201 |
 | FUNC-03 | GET /v1/knowledge/:id | Retrieve existing entry, expect 200 |
 | FUNC-04 | GET /v1/knowledge/:id | Non-existent ID, expect 404 |
 | FUNC-05 | GET /v1/knowledge?query= | Search, expect results |
 | FUNC-06 | GET /v1/knowledge?query=&user_id= | Search scoped to user |
+| FUNC-06B | GET /v1/knowledge | Governance-aware filter keys |
 | FUNC-07 | PATCH /v1/knowledge/:id | Update confidence, expect 200 |
 | FUNC-08 | PATCH /v1/knowledge/:id | Forbidden field, expect 400 |
 | FUNC-09 | DELETE /v1/knowledge/:id | Delete entry, expect 204 |
@@ -81,6 +90,7 @@ Every endpoint exercised.
 | FUNC-13 | DELETE /v1/user-model/:user_id | Delete all, expect 204 |
 | FUNC-14 | POST /v1/export | Export user data, expect KnowledgeStore |
 | FUNC-15 | POST /v1/import | Import store, expect import summary |
+| FUNC-16 | GET /v1/capabilities | Governance support is advertised |
 
 ## CI Integration
 

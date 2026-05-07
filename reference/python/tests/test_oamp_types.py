@@ -13,6 +13,10 @@ from oamp_types import (
     KnowledgeEntry,
     KnowledgeSource,
     KnowledgeDecay,
+    Governance,
+    GovernanceHandling,
+    Provenance,
+    ProvenanceSource,
     KnowledgeStore,
     CommunicationProfile,
     Correction,
@@ -108,6 +112,32 @@ class TestKnowledgeEntry:
         assert entry.source.agent_id == "my-agent"
         assert entry.decay.last_confirmed is not None
         assert entry.metadata == {"priority": "high"}
+
+    def test_knowledge_entry_with_governance_and_provenance(self):
+        entry = KnowledgeEntry(
+            oamp_version="1.2.0",
+            user_id="user-1",
+            category=KnowledgeCategory.fact,
+            content="User can access the finance console.",
+            confidence=0.9,
+            source=KnowledgeSource(session_id="sess-1"),
+            provenance=Provenance(
+                sources=[
+                    ProvenanceSource(
+                        session_id="sess-1",
+                        timestamp=datetime(2026, 5, 7, 12, 0, 0, tzinfo=timezone.utc),
+                        turn_id="turn-1",
+                    )
+                ]
+            ),
+            governance=Governance(
+                sensitivity_class="internal",
+                labels=["finance"],
+                handling=GovernanceHandling(retrieval="governed", export="governed"),
+            ),
+        )
+        assert entry.governance.sensitivity_class == "internal"
+        assert entry.provenance.sources[0].turn_id == "turn-1"
 
     def test_reject_invalid_confidence(self):
         with pytest.raises(ValidationError):
@@ -240,6 +270,33 @@ class TestKnowledgeEntrySerialization:
         assert parsed.source.agent_id == entry.source.agent_id
         assert parsed.decay.half_life_days == entry.decay.half_life_days
         assert parsed.tags == entry.tags
+
+    def test_roundtrip_preserves_governance_and_provenance(self):
+        entry = KnowledgeEntry(
+            oamp_version="1.2.0",
+            user_id="user-1",
+            category=KnowledgeCategory.preference,
+            content="User wants governed summaries.",
+            confidence=0.8,
+            source=KnowledgeSource(session_id="sess-1"),
+            provenance=Provenance(
+                sources=[
+                    ProvenanceSource(
+                        session_id="sess-1",
+                        timestamp=datetime(2026, 5, 7, 12, 0, 0, tzinfo=timezone.utc),
+                        turn_id="turn-2",
+                    )
+                ]
+            ),
+            governance=Governance(
+                sensitivity_class="confidential",
+                labels=["finance", "ops"],
+            ),
+        )
+        parsed = KnowledgeEntry.model_validate_json(entry.model_dump_json(exclude_none=True))
+        assert parsed.oamp_version == "1.2.0"
+        assert parsed.governance.labels == ["finance", "ops"]
+        assert parsed.provenance.sources[0].turn_id == "turn-2"
 
 
 class TestKnowledgeStore:

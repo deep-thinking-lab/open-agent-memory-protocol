@@ -41,6 +41,45 @@ def make_knowledge_entry(
     return entry
 
 
+def make_governed_knowledge_entry(
+    user_id: str = "compliance-governed-user",
+    category: str = "fact",
+    content: str = "Governed compliance test knowledge entry",
+    confidence: float = 0.8,
+    session_id: str = "compliance-session",
+    entry_id: str | None = None,
+) -> dict[str, Any]:
+    """Create a valid v1.2 KnowledgeEntry with governance and provenance."""
+    entry = make_knowledge_entry(
+        user_id=user_id,
+        category=category,
+        content=content,
+        confidence=confidence,
+        session_id=session_id,
+        entry_id=entry_id,
+    )
+    entry["oamp_version"] = "1.2.0"
+    entry["provenance"] = {
+        "sources": [
+            {
+                "session_id": session_id,
+                "timestamp": entry["source"]["timestamp"],
+                "turn_id": "turn-1",
+            }
+        ],
+        "derived": False,
+    }
+    entry["governance"] = {
+        "sensitivity_class": "internal",
+        "labels": ["compliance", "finance"],
+        "handling": {
+            "retrieval": "governed",
+            "export": "governed",
+        },
+    }
+    return entry
+
+
 def make_user_model(
     user_id: str = "compliance-test-user",
     model_version: int = 1,

@@ -3,7 +3,11 @@
 This backlog turns the governed-memory proposal into a reviewable upstream
 sequence for OAMP.
 
-Related draft: `spec/v1.2/oamp-v1.2-governed-memory-draft.md`
+Related drafts:
+
+- `spec/v1.2/oamp-v1.2-governed-memory-draft.md`
+- `spec/v1.2/oamp-v1.2-draft.md`
+- `spec/v2.0/oamp-v2.0-withheld-results-rfc.md`
 
 ---
 

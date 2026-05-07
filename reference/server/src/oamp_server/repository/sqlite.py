@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS knowledge_entries (
     -- Encrypted columns (base64-encoded AES-256-GCM ciphertext)
     content_enc       TEXT NOT NULL,
     source_enc        TEXT NOT NULL,
+    provenance_enc    TEXT,
+    governance_enc    TEXT,
     decay_enc         TEXT,
     tags_enc          TEXT,
     metadata_enc      TEXT,
@@ -187,6 +189,16 @@ class SQLiteRepository(Repository):
         source_json = json.dumps(entry.source.model_dump(mode="json", exclude_none=True)) if entry.source else "{}"
         source_enc, _ = await self._encrypt_field_with_key(source_json, entry.user_id, key_id)
 
+        provenance_json = json.dumps(entry.provenance.model_dump(mode="json", exclude_none=True)) if entry.provenance else None
+        provenance_enc = None
+        if provenance_json:
+            provenance_enc, _ = await self._encrypt_field_with_key(provenance_json, entry.user_id, key_id)
+
+        governance_json = json.dumps(entry.governance.model_dump(mode="json", exclude_none=True)) if entry.governance else None
+        governance_enc = None
+        if governance_json:
+            governance_enc, _ = await self._encrypt_field_with_key(governance_json, entry.user_id, key_id)
+
         decay_json = json.dumps(entry.decay.model_dump(mode="json", exclude_none=True)) if entry.decay else None
         decay_enc = None
         if decay_json:
@@ -211,12 +223,12 @@ class SQLiteRepository(Repository):
         await db.execute(
             """INSERT INTO knowledge_entries
                (id, user_id, category, confidence, content_enc, source_enc,
-                decay_enc, tags_enc, metadata_enc, oamp_version, type,
+                provenance_enc, governance_enc, decay_enc, tags_enc, metadata_enc, oamp_version, type,
                 encryption_key_id, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 entry.id, entry.user_id, category_val, entry.confidence,
-                content_enc, source_enc, decay_enc, tags_enc, metadata_enc,
+                content_enc, source_enc, provenance_enc, governance_enc, decay_enc, tags_enc, metadata_enc,
                 entry.oamp_version, entry.type, key_id, now, now,
             ),
         )
@@ -271,6 +283,8 @@ class SQLiteRepository(Repository):
             """UPDATE knowledge_entries
                SET content_enc = 'ZEROED',
                    source_enc = 'ZEROED',
+                   provenance_enc = 'ZEROED',
+                   governance_enc = 'ZEROED',
                    decay_enc = 'ZEROED',
                    tags_enc = 'ZEROED',
                    metadata_enc = 'ZEROED'
@@ -623,6 +637,14 @@ class SQLiteRepository(Repository):
         if row["decay_enc"]:
             decay_str = await self._decrypt_field(row["decay_enc"], key_id, user_id)
             data["decay"] = json.loads(decay_str)
+
+        if row["provenance_enc"]:
+            provenance_str = await self._decrypt_field(row["provenance_enc"], key_id, user_id)
+            data["provenance"] = json.loads(provenance_str)
+
+        if row["governance_enc"]:
+            governance_str = await self._decrypt_field(row["governance_enc"], key_id, user_id)
+            data["governance"] = json.loads(governance_str)
 
         if row["tags_enc"]:
             tags_str = await self._decrypt_field(row["tags_enc"], key_id, user_id)

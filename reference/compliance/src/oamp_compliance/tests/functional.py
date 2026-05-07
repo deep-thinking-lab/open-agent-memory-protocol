@@ -6,7 +6,7 @@ Tests every endpoint defined in spec Section 6.
 from __future__ import annotations
 
 from ..client import OAMPClient
-from ..models import make_knowledge_entry, make_user_model, make_knowledge_store
+from ..models import make_governed_knowledge_entry, make_knowledge_entry, make_user_model, make_knowledge_store
 from .utils import TestResult, new_id, registry
 
 
@@ -32,6 +32,20 @@ def test_create_with_metadata(client: OAMPClient) -> TestResult:
     if resp.status_code != 201:
         return TestResult("FUNC-02", "Accept unknown metadata", TestResult.FAIL, str(resp.text))
     return TestResult("FUNC-02", "Accept unknown metadata", TestResult.PASS)
+
+
+@registry.register("func", "FUNC-02B", "POST /v1/knowledge — create with governance/provenance, expect 201")
+def test_create_with_governance_and_provenance(client: OAMPClient) -> TestResult:
+    entry = make_governed_knowledge_entry(entry_id=new_id())
+    resp = client.create_knowledge(entry)
+    if resp.status_code != 201:
+        return TestResult("FUNC-02B", "Accept governance/provenance", TestResult.FAIL, str(resp.text))
+    data = resp.json()
+    if data.get("governance", {}).get("sensitivity_class") != "internal":
+        return TestResult("FUNC-02B", "Accept governance/provenance", TestResult.FAIL, "Governance missing from response")
+    if not data.get("provenance", {}).get("sources"):
+        return TestResult("FUNC-02B", "Accept governance/provenance", TestResult.FAIL, "Provenance missing from response")
+    return TestResult("FUNC-02B", "Accept governance/provenance", TestResult.PASS)
 
 
 @registry.register("func", "FUNC-03", "GET /v1/knowledge/:id — retrieve existing entry, expect 200")
@@ -101,6 +115,25 @@ def test_search_scoped(client: OAMPClient) -> TestResult:
     if not all(e.get("user_id") == user_a for e in results):
         return TestResult("FUNC-06", "User-scoped search", TestResult.FAIL, "Results leaked across users")
     return TestResult("FUNC-06", "User-scoped search", TestResult.PASS)
+
+
+@registry.register("func", "FUNC-06B", "GET /v1/knowledge with governance filters — expect filtered results")
+def test_governance_filters(client: OAMPClient) -> TestResult:
+    user_id = f"compliance-governance-{new_id()[:8]}"
+    governed = make_governed_knowledge_entry(user_id=user_id, entry_id=new_id())
+    plain = make_knowledge_entry(user_id=user_id, entry_id=new_id())
+    for entry in [governed, plain]:
+        resp = client.create_knowledge(entry)
+        if resp.status_code != 201:
+            return TestResult("FUNC-06B", "Governance filters", TestResult.FAIL, f"Create failed: {resp.text}")
+
+    resp = client.list_knowledge(user_id=user_id, sensitivity_class=["internal"])
+    if resp.status_code != 200:
+        return TestResult("FUNC-06B", "Governance filters", TestResult.FAIL, str(resp.text))
+    results = resp.json()
+    if len(results) != 1 or results[0].get("id") != governed["id"]:
+        return TestResult("FUNC-06B", "Governance filters", TestResult.FAIL, "Sensitivity filter did not isolate governed entry")
+    return TestResult("FUNC-06B", "Governance filters", TestResult.PASS)
 
 
 @registry.register("func", "FUNC-07", "PATCH /v1/knowledge/:id — update confidence, expect 200")
@@ -286,3 +319,17 @@ def test_import(client: OAMPClient) -> TestResult:
         return TestResult("FUNC-15", "Import", TestResult.FAIL,
                           "Import response missing id_mappings field")
     return TestResult("FUNC-15", "Import", TestResult.PASS)
+
+
+@registry.register("func", "FUNC-16", "GET /v1/capabilities — governance support is advertised")
+def test_capabilities(client: OAMPClient) -> TestResult:
+    resp = client.get_capabilities()
+    if resp.status_code != 200:
+        return TestResult("FUNC-16", "Capabilities", TestResult.FAIL, str(resp.text))
+    body = resp.json()
+    governance = body.get("capabilities", {}).get("governance", {})
+    if not governance.get("supported"):
+        return TestResult("FUNC-16", "Capabilities", TestResult.FAIL, "governance.supported was not true")
+    if not governance.get("extended_provenance_supported"):
+        return TestResult("FUNC-16", "Capabilities", TestResult.FAIL, "extended_provenance_supported missing")
+    return TestResult("FUNC-16", "Capabilities", TestResult.PASS)
