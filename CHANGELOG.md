@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0-draft] — 2026-05-07
+
+### Added (proposed, draft for community review)
+- **`spec/v1.2/oamp-v1.2-governed-memory-draft.md`** — proposal for
+  standardizing governed-memory metadata across OAMP backends used by
+  `cosmictron`, `kizuna-mem`, and `ultra`.
+- **Working split for upstream review:** v1.2 would standardize additive
+  governance metadata and richer provenance, while portable withheld/redacted
+  result semantics are explicitly deferred to a separate v2.0 design track.
+
+### Proposed scope
+- Optional `governance` field on `KnowledgeEntry`
+- Optional extended `provenance` field for multi-source lineage
+- Capabilities advertisement for governance support
+- Optional governance-aware filter keys
+
+### Explicitly deferred
+- Standard `withholding_reason`
+- Standard redacted/withheld result documents
+- Standard stream-level withheld event semantics
+- Cross-backend authorization policy language
+
 ## [1.1.0-draft] — 2026-05-02
 
 ### Added (proposed, draft for community review)
