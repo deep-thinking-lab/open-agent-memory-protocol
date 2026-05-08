@@ -38,6 +38,11 @@ backends that want to reuse the same files in CI without bespoke setup.
 
 ## Execution Checklist
 
+A runnable implementation of this checklist lives at
+[`scripts/interop-roundtrip.sh`](../scripts/interop-roundtrip.sh). The brief
+to hand to a backend implementer is
+[`docs/governed-memory-interop-agent-brief.md`](./governed-memory-interop-agent-brief.md).
+
 For each producer/consumer pair:
 
 1. Validate the fixture pack locally with the repo validator or equivalent.
