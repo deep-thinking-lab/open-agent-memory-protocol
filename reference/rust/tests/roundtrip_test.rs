@@ -165,10 +165,7 @@ fn test_parse_v13_fixture() {
             .unwrap();
     let entry: KnowledgeEntry = serde_json::from_str(&json).unwrap();
     assert_eq!(entry.oamp_version, "1.3.0");
-    assert_eq!(
-        entry.governance.as_ref().unwrap().labels[0],
-        "work.code"
-    );
+    assert_eq!(entry.governance.as_ref().unwrap().labels[0], "work.code");
 }
 
 #[test]
