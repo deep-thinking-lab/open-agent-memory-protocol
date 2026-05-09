@@ -2,7 +2,7 @@
 
 **Status:** Draft RFC seed  
 **Date:** 2026-05-07  
-**Authors:** Deep Thinking LLC  
+**Authors:** Jonathan Conway (Deep Thinking)  
 **Related issue:** `#16`
 
 ---

@@ -2,7 +2,7 @@
 
 **상태:** 초안  
 **날짜:** 2026-04-06  
-**저자:** Deep Thinking LLC  
+**저자:** Jonathan Conway (Deep Thinking)  
 **저장소:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 
 ---

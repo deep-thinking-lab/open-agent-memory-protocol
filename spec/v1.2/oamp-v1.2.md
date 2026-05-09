@@ -2,7 +2,7 @@
 
 **Status:** Stable  
 **Date:** 2026-05-09  
-**Authors:** Deep Thinking LLC  
+**Authors:** Jonathan Conway (Deep Thinking)  
 **Supersedes:** None — extends v1.0.0 and v1.1.0 additively  
 **Repository:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 

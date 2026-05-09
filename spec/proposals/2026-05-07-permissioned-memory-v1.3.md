@@ -3,7 +3,7 @@
 **Status:** Proposal draft, now superseded by `spec/v1.3/oamp-v1.3-draft.md`
 **Target version:** v1.3 (additive over v1.0 / v1.1 / v1.2)
 **Date:** 2026-05-07
-**Authors:** Deep Thinking LLC
+**Authors:** Jonathan Conway (Deep Thinking)
 **Repository:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 **Depends on:** `spec/v1/oamp-v1.md`, `spec/v1.1/oamp-v1.1.md`, `spec/v1.2/oamp-v1.2.md`, `spec/v1.2/oamp-v1.2-governed-memory.md`
 **Related:** `spec/v2.0/oamp-v2.0-withheld-results-rfc.md`

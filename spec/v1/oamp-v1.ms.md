@@ -2,7 +2,7 @@
 
 **Status:** Draf  
 **Tarikh:** 2026-04-06  
-**Pengarang:** Deep Thinking LLC  
+**Pengarang:** Jonathan Conway (Deep Thinking)  
 **Repositori:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 
 ---
