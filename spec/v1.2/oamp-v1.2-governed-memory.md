@@ -2,7 +2,7 @@
 
 **Status:** Stable
 **Date:** 2026-05-09
-**Authors:** Deep Thinking LLC
+**Authors:** Jonathan Conway (Deep Thinking)
 **Related implementations:** `cosmictron`, `kizuna-mem`, `ultra`, `toraeru`
 **Depends on:** `spec/v1/oamp-v1.md`, `spec/v1.1/oamp-v1.1.md`
 

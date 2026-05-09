@@ -2,7 +2,7 @@
 
 **ステータス:** 草案  
 **日付:** 2026-04-06  
-**著者:** Deep Thinking LLC  
+**著者:** Jonathan Conway (Deep Thinking)  
 **リポジトリ:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 
 ---

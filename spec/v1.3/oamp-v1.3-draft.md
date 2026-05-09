@@ -2,7 +2,7 @@
 
 **Status:** Draft (proposed minor version)  
 **Date:** 2026-05-07  
-**Authors:** Deep Thinking LLC  
+**Authors:** Jonathan Conway (Deep Thinking)  
 **Supersedes:** None — extends v1.0.0, v1.1.0, and v1.2.0 additively  
 **Repository:** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 

@@ -2,7 +2,7 @@
 
 **状态：** 草案  
 **日期：** 2026-04-06  
-**作者：** Deep Thinking LLC  
+**作者：** Jonathan Conway (Deep Thinking)  
 **仓库：** `github.com/deep-thinking-llc/open-agent-memory-protocol`
 
 ---
