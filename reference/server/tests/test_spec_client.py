@@ -282,10 +282,11 @@ class TestSpecClientImportExport:
         assert exported["type"] == "knowledge_store"
         assert "exported_at" in exported
 
-        # ── Step 6: Export also returns metadata (with user_model if exists) ──
-        assert "metadata" in exported
-        # User model not created yet, so metadata should be empty
-        # (We didn't create a user model in this test)
+        # ── Step 6: Export omits metadata when no user_model is attached ──
+        # The export must round-trip through /v1/import, which rejects unknown
+        # top-level keys. Empty metadata used to leak through; the reference
+        # now omits the field entirely when there is nothing to put in it.
+        assert "metadata" not in exported or exported["metadata"] == {}
 
     @pytest.mark.skipif(
         not (SPEC_EXAMPLES / "knowledge-store.json").exists(),

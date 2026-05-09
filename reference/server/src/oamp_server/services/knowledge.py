@@ -143,13 +143,15 @@ class KnowledgeService:
             "user_id": user_id,
             "entries": [e.model_dump(mode="json", exclude_none=True) for e in entries],
             "exported_at": datetime.now(timezone.utc).isoformat(),
-            "metadata": {},
         }
 
-        # Include the User Model in metadata if present
+        # Include the User Model in metadata only when present — empty metadata
+        # is omitted because the strict KnowledgeStore schema rejects unknown
+        # top-level keys on /v1/import, breaking self-roundtrip for stores
+        # without a UserModel.
         user_model = None if grant is not None and user_id != grant.sub else await user_model_service.repo.get_user_model(user_id)
         if user_model is not None:
-            result["metadata"]["user_model"] = user_model.model_dump(mode="json", exclude_none=True)
+            result["metadata"] = {"user_model": user_model.model_dump(mode="json", exclude_none=True)}
 
         return result
 
