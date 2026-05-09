@@ -1,6 +1,6 @@
 # Governed Memory Interop Matrix
 
-**Status:** Working draft  
+**Status:** In progress  
 **Date:** 2026-05-09
 **Related issue:** `#18`
 
@@ -79,7 +79,7 @@ For each producer/consumer pair:
 | `kizuna-mem` | `cosmictron` | backend -> backend | fixture pack, governance, provenance, capabilities | automated |
 | `cosmictron` | `ultra` | backend capabilities -> mediated client | capabilities negotiation, fail-closed governance expectations | contract-tested |
 | `kizuna-mem` | `ultra` | backend capabilities -> mediated client | capabilities negotiation, fail-closed governance expectations | contract-tested |
-| `cosmictron` | `toraeru` | backend -> integrator | fixture pack, capabilities, fixture consumption | blocked |
+| `cosmictron` | `toraeru` | backend -> integrator | fixture pack, capabilities, fixture consumption | automated |
 | `kizuna-mem` | `toraeru` | backend -> integrator | fixture pack, capabilities, fixture consumption | automated |
 
 ## Release-Blocking Minimum For `v1.2`
@@ -151,13 +151,19 @@ have at least:
 
 ### `cosmictron -> toraeru`
 
-- Currently blocked by user-id dialect mismatch
-- Cosmictron's typed `/v1/oamp/*` routes require a 64-hex identity shape,
-  advertised in `capabilities.user_id_format`
-- Toraeru's current schema and loader emit tenant-scoped user ids of the form
-  `<tenant_id>:<user>`
-- This needs explicit user-id dialect negotiation or substrate-specific
-  adaptation before the row can be marked automated
+- Automated in `toraeru` via
+  `crates/toraeru-skill-loader/tests/real_substrate.rs` behind the
+  `kizuna-real-substrate` feature, with a CI helper script at
+  `scripts/run-cosmictron-real-substrate-canary.sh`
+- Verified against a live Cosmictron canary server on 2026-05-09
+- Toraeru now probes `GET /v1/capabilities`, reads the advertised
+  `capabilities.user_id_format` contract, and rewrites tenant-scoped opaque
+  user ids to the stable 64-hex identity shape required by Cosmictron's typed
+  `/v1/oamp/*` routes
+- Governance, confidence, top-level provenance, `metadata.toraeru.*`, tags,
+  and `source.agent_id` all round-trip on this path
+- Cosmictron currently advertises `extended_provenance_supported=true` and the
+  canary confirms detailed `provenance.sources[].agent_id` preservation
 
 ## Notes
 
