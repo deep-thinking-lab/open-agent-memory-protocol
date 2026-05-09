@@ -180,6 +180,81 @@ jobs:
         working-directory: reference/server
         run: PYTHONPATH=src python3 -m pytest tests/ -v
 
+  # ── Interop canary (self-loopback against reference server) ────
+
+  interop-canary:
+    name: Interop canary (reference server self-loopback)
+    runs-on: [self-hosted, macOS]
+    needs: [test-server]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: server-${{ runner.os }}-${{ hashFiles('reference/server/pyproject.toml') }}
+          restore-keys: server-${{ runner.os }}-
+
+      - name: Install reference server
+        working-directory: reference/server
+        run: |-
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e ".[dev]"
+
+      - name: Start two reference server instances
+        working-directory: reference/server
+        run: |-
+          mkdir -p /tmp/oamp-canary
+          PYTHONPATH=src nohup python3 -m oamp_server --host 127.0.0.1 --port 8001 --db-path /tmp/oamp-canary/producer.db > /tmp/oamp-canary/producer.log 2>&1 &
+          echo $! > /tmp/oamp-canary/producer.pid
+          PYTHONPATH=src nohup python3 -m oamp_server --host 127.0.0.1 --port 8002 --db-path /tmp/oamp-canary/consumer.db > /tmp/oamp-canary/consumer.log 2>&1 &
+          echo $! > /tmp/oamp-canary/consumer.pid
+
+      - name: Wait for servers to become healthy
+        run: |-
+          for url in http://127.0.0.1:8001/health http://127.0.0.1:8002/health; do
+            for i in $(seq 1 30); do
+              if curl -sf "$url" >/dev/null; then
+                echo "ready: $url"
+                break
+              fi
+              if [ "$i" = "30" ]; then
+                echo "timeout waiting for $url"
+                cat /tmp/oamp-canary/*.log
+                exit 1
+              fi
+              sleep 1
+            done
+          done
+
+      - name: Run interop canary
+        run: |-
+          scripts/interop-roundtrip.sh \
+            --producer-url http://127.0.0.1:8001 \
+            --consumer-url http://127.0.0.1:8002 \
+            --out-dir /tmp/oamp-canary/out
+
+      - name: Stop reference servers
+        if: always()
+        run: |-
+          for f in /tmp/oamp-canary/producer.pid /tmp/oamp-canary/consumer.pid; do
+            [ -f "$f" ] && kill "$(cat "$f")" 2>/dev/null || true
+          done
+
+      - name: Upload canary artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interop-canary-artifacts
+          path: |
+            /tmp/oamp-canary/out/
+            /tmp/oamp-canary/*.log
+          if-no-files-found: warn
+
   # ── Spec validation & cross-language checks ─────────────
 
   cross-language-check:
