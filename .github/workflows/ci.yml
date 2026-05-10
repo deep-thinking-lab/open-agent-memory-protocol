@@ -11,7 +11,7 @@ jobs:
 
   test-rust:
     name: Rust
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     steps:
@@ -36,7 +36,7 @@ jobs:
 
   test-typescript:
     name: TypeScript
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     steps:
@@ -66,7 +66,7 @@ jobs:
 
   test-python:
     name: Python ${{ matrix.python-version }}
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     strategy:
@@ -104,7 +104,7 @@ jobs:
 
   test-go:
     name: Go
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     steps:
@@ -128,7 +128,7 @@ jobs:
 
   test-elixir:
     name: Elixir
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     steps:
@@ -156,7 +156,7 @@ jobs:
 
   test-server:
     name: Reference Server
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 15
 
     steps:
@@ -184,7 +184,7 @@ jobs:
 
   interop-canary:
     name: Interop canary (reference server self-loopback)
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     needs: [test-server]
     timeout-minutes: 10
 
@@ -259,7 +259,7 @@ jobs:
 
   cross-language-check:
     name: Cross-language consistency
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     needs: [test-rust, test-typescript, test-python, test-go, test-elixir, test-server]
     timeout-minutes: 10
 
