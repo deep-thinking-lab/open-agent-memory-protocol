@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+# kizuna-stage-1 runs the actions runner as root in a user namespace that
+# strips CAP_CHOWN, so tar's default ownership-preservation behaviour fails
+# with EPERM on every extraction (mise-action, setup-*, etc.). Setting
+# TAR_OPTIONS=--no-same-owner at the workflow level makes GNU tar skip the
+# chown step everywhere, which is the actual fix for this runner's
+# environment rather than a workaround.
+env:
+  TAR_OPTIONS: --no-same-owner
+
 jobs:
   # ── Rust ────────────────────────────────────────────────
 
