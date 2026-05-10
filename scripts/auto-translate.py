@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Translate OAMP spec markdown to ja/zh/ko/ms via OpenAI.
+"""Translate OAMP spec markdown and README into ja/zh/ko/ms via OpenAI.
 
-Loops over every spec version under spec/, finds the canonical English
-source (prefers oamp-v{N}.md, falls back to oamp-v{N}-draft.md), and
-translates each to the four target languages. Outputs land alongside
-the source as oamp-v{N}.{lang}.md (always stripping -draft from the
-output filename so dthink.ai's content paths stay stable).
+Two translation surfaces:
 
-A translation is only regenerated if it is missing or older (per git
-log) than its source. This keeps re-runs cheap and produces minimal
-PRs.
+1. **Spec files**: every spec version under spec/, finding the canonical
+   English source (prefers oamp-v{N}.md, falls back to oamp-v{N}-draft.md),
+   translated into oamp-v{N}.{lang}.md alongside the source. Output
+   filenames always drop the -draft suffix so dthink.ai's content paths
+   stay stable across promotion.
+
+2. **README**: README.md at the repo root, translated into
+   docs/README.{lang}.md.
+
+A translation is regenerated only if it is missing or older (per git
+commit timestamp) than its source. This keeps re-runs cheap and produces
+minimal PRs.
 
 Designed to be invoked from the auto-translate-spec.yml workflow with
 OPENAI_API_KEY in env.
@@ -31,7 +36,7 @@ LANGS = {
     "ms": "Bahasa Melayu",
 }
 
-SYSTEM_PROMPT = (
+SPEC_PROMPT = (
     "You are a technical translator for an IETF-style protocol "
     "specification. Translate the following markdown document into "
     "{language}. Preserve all markdown formatting, code blocks, JSON "
@@ -42,10 +47,20 @@ SYSTEM_PROMPT = (
     "translator notes or commentary."
 )
 
-# Each tuple is (version_dir_relative_to_repo, source_base, output_stem).
+README_PROMPT = (
+    "You are a technical translator for an open-source project README. "
+    "Translate the following markdown document into {language}. Preserve "
+    "all markdown formatting, code blocks, shell commands, JSON examples, "
+    "file paths, URLs, package names, and import statements exactly as "
+    "they appear. Keep technical identifiers (function names, type names, "
+    "CLI flags) in English. Translate prose, headings, table cells, and "
+    "image alt text only. Do not add translator notes or commentary."
+)
+
+# Spec targets: (version_dir, source_base, output_stem).
 # source_base is the filename without .md or -draft.md.
-# output_stem is what the translated files are named (without .{lang}.md).
-TARGETS = [
+# output_stem is what translated files are named (without .{lang}.md).
+SPEC_TARGETS = [
     ("spec/v1", "oamp-v1", "oamp-v1"),
     ("spec/v1.1", "oamp-v1.1", "oamp-v1.1"),
     ("spec/v1.2", "oamp-v1.2", "oamp-v1.2"),
@@ -86,16 +101,85 @@ def needs_update(source: Path, translated: Path, repo: Path) -> bool:
     return src_t > tx_t
 
 
-def translate(client: OpenAI, source_text: str, language: str) -> str:
+def translate(client: OpenAI, source_text: str, language: str, prompt: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT.format(language=language)},
+            {"role": "system", "content": prompt.format(language=language)},
             {"role": "user", "content": source_text},
         ],
         temperature=0.2,
     )
     return response.choices[0].message.content
+
+
+class Counts:
+    __slots__ = ("updated", "skipped", "missing")
+
+    def __init__(self) -> None:
+        self.updated = 0
+        self.skipped = 0
+        self.missing = 0
+
+
+def translate_one(
+    client: OpenAI,
+    source: Path,
+    out: Path,
+    lang_name: str,
+    prompt: str,
+    repo: Path,
+    counts: Counts,
+) -> bool:
+    """Translate source to out if out is missing or older. Returns True on
+    success or skip; False on translation failure."""
+    if not needs_update(source, out, repo):
+        print(f"skip: {out.relative_to(repo)} up-to-date")
+        counts.skipped += 1
+        return True
+
+    print(f"translate: {source.relative_to(repo)} -> {out.relative_to(repo)} ({lang_name})")
+    try:
+        translated = translate(client, source.read_text(), lang_name, prompt)
+    except Exception as exc:  # noqa: BLE001 — surface any API error
+        print(f"ERROR: OpenAI call failed for {out}: {exc}", file=sys.stderr)
+        return False
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(translated)
+    counts.updated += 1
+    return True
+
+
+def translate_specs(client: OpenAI, repo: Path, counts: Counts) -> bool:
+    for rel_dir, source_base, output_stem in SPEC_TARGETS:
+        version_dir = repo / rel_dir
+        source = find_source(version_dir, source_base)
+        if source is None:
+            print(f"skip: no source in {rel_dir} for {source_base}")
+            counts.missing += 1
+            continue
+
+        for code, name in LANGS.items():
+            out = version_dir / f"{output_stem}.{code}.md"
+            if not translate_one(client, source, out, name, SPEC_PROMPT, repo, counts):
+                return False
+    return True
+
+
+def translate_readme(client: OpenAI, repo: Path, counts: Counts) -> bool:
+    source = repo / "README.md"
+    if not source.exists():
+        print("skip: README.md not found at repo root")
+        counts.missing += 1
+        return True
+
+    docs = repo / "docs"
+    for code, name in LANGS.items():
+        out = docs / f"README.{code}.md"
+        if not translate_one(client, source, out, name, README_PROMPT, repo, counts):
+            return False
+    return True
 
 
 def main() -> int:
@@ -106,43 +190,18 @@ def main() -> int:
 
     client = OpenAI(api_key=api_key)
     repo = Path(__file__).resolve().parents[1]
+    counts = Counts()
 
-    updated = 0
-    skipped = 0
-    missing = 0
+    if not translate_specs(client, repo, counts):
+        return 1
+    if not translate_readme(client, repo, counts):
+        return 1
 
-    for rel_dir, source_base, output_stem in TARGETS:
-        version_dir = repo / rel_dir
-        source = find_source(version_dir, source_base)
-        if source is None:
-            print(f"skip: no source in {rel_dir} for {source_base}")
-            missing += 1
-            continue
-
-        try:
-            source_text = source.read_text()
-        except OSError as exc:
-            print(f"ERROR: cannot read {source}: {exc}", file=sys.stderr)
-            return 1
-
-        for code, name in LANGS.items():
-            out = version_dir / f"{output_stem}.{code}.md"
-            if not needs_update(source, out, repo):
-                print(f"skip: {out.relative_to(repo)} up-to-date")
-                skipped += 1
-                continue
-
-            print(f"translate: {source.relative_to(repo)} -> {out.relative_to(repo)} ({name})")
-            try:
-                translated = translate(client, source_text, name)
-            except Exception as exc:  # noqa: BLE001 — surface any API error
-                print(f"ERROR: OpenAI call failed for {out}: {exc}", file=sys.stderr)
-                return 1
-
-            out.write_text(translated)
-            updated += 1
-
-    print(f"done: {updated} updated, {skipped} skipped, {missing} missing source(s)")
+    print(
+        f"done: {counts.updated} updated, "
+        f"{counts.skipped} skipped, "
+        f"{counts.missing} missing source(s)"
+    )
     return 0
 
 
