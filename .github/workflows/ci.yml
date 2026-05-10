@@ -310,7 +310,7 @@ jobs:
           RUST_VER=$(grep 'OAMP_VERSION' reference/rust/src/knowledge.rs | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
           TS_VER=$(grep "OAMP_VERSION" reference/typescript/src/index.ts | head -1 | sed "s/.*'\([^']*\)'.*/\1/")
           PY_VER=$(grep "OAMP_VERSION" reference/python/src/oamp_types/__init__.py | head -1 | sed "s/.*\"\([^\"]*\)\".*/\1/")
-          GO_VER=$(grep 'OAMPVersion' reference/go/oamp.go | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          GO_VER=$(grep 'OAMPVersion =' reference/go/oamp.go | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
           EX_VER=$(grep 'oamp_version' reference/elixir/lib/oamp_types.ex | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
           SPEC_VER=$(grep 'oamp_version' spec/v1/oamp-v1.md | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || true)
 
