@@ -8,14 +8,23 @@ on:
 permissions:
   contents: write
 
+# kizuna-stage-1's actions runner runs as root in a user namespace where
+# CAP_CHOWN is restricted; tar archive extraction needs --no-same-owner to
+# avoid EPERM. See .github/workflows/ci.yml for the matching setting.
+env:
+  TAR_OPTIONS: --no-same-owner
+
 jobs:
   test:
     name: Run tests before release
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Rust — Run tests
         working-directory: reference/rust
@@ -36,12 +45,17 @@ jobs:
       - name: Python — Install dependencies
         working-directory: reference/python
         run: |-
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -e ".[dev]"
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -e ".[dev]"
 
       - name: Python — Run tests
         working-directory: reference/python
-        run: python3 -m pytest tests/ -v
+        run: .venv/bin/python -m pytest tests/ -v
+
+      - name: Go — Download modules
+        working-directory: reference/go
+        run: go mod download
 
       - name: Go — Run tests
         working-directory: reference/go
@@ -50,16 +64,21 @@ jobs:
       - name: Elixir — Run tests
         working-directory: reference/elixir
         run: |-
+          mix local.hex --force
+          mix local.rebar --force
           mix deps.get
           mix test
 
   publish-rust:
     name: Publish Rust crate
     needs: test
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Publish to crates.io
         working-directory: reference/rust
@@ -70,10 +89,13 @@ jobs:
   publish-npm:
     name: Publish npm package
     needs: test
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Setup Node
         working-directory: reference/typescript
@@ -92,21 +114,27 @@ jobs:
   publish-pypi:
     name: Publish Python package
     needs: test
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Install build tools
-        run: python3 -m pip install --upgrade build twine
+        working-directory: reference/python
+        run: |-
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade build twine
 
       - name: Build package
         working-directory: reference/python
-        run: python3 -m build
+        run: .venv/bin/python -m build
 
       - name: Publish to PyPI
         working-directory: reference/python
-        run: python3 -m twine upload dist/* --non-interactive
+        run: .venv/bin/python -m twine upload dist/* --non-interactive
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
@@ -114,31 +142,39 @@ jobs:
   publish-elixir:
     name: Publish Elixir package
     needs: test
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Publish to Hex.pm
         working-directory: reference/elixir
-        run: mix hex.publish --yes
+        run: |-
+          mix local.hex --force
+          mix hex.publish --yes
         env:
           HEX_API_KEY: ${{ secrets.HEX_TOKEN }}
 
   create-github-release:
     name: Create GitHub Release
     needs: test
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux, build-hetzner]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Set up toolchains via mise
+        uses: jdx/mise-action@v4
 
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
