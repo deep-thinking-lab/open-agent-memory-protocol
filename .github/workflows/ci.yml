@@ -20,7 +20,7 @@ jobs:
 
   test-rust:
     name: Rust
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     steps:
@@ -45,7 +45,7 @@ jobs:
 
   test-typescript:
     name: TypeScript
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   test-python:
     name: Python ${{ matrix.python-version }}
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     strategy:
@@ -119,7 +119,7 @@ jobs:
 
   test-go:
     name: Go
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     steps:
@@ -150,7 +150,7 @@ jobs:
 
   test-elixir:
     name: Elixir
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     steps:
@@ -186,7 +186,7 @@ jobs:
 
   test-server:
     name: Reference Server
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     timeout-minutes: 15
 
     steps:
@@ -224,7 +224,7 @@ jobs:
 
   interop-canary:
     name: Interop canary (reference server self-loopback)
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     needs: [test-server]
     timeout-minutes: 10
 
@@ -306,7 +306,7 @@ jobs:
 
   cross-language-check:
     name: Cross-language consistency
-    runs-on: [self-hosted, Linux, build-hetzner]
+    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
     # Only require what reliably runs on this runner today. The TS/Go/Elixir/
     # Python-matrix jobs fail on toolchain or setup-python issues that need
     # runner-side fixes; including them here would skip this check on every
