@@ -298,6 +298,49 @@ class TestKnowledgeEntrySerialization:
         assert parsed.governance.labels == ["finance", "ops"]
         assert parsed.provenance.sources[0].turn_id == "turn-2"
 
+    def test_roundtrip_preserves_v131_mediation_and_factory_provenance(self):
+        entry = KnowledgeEntry(
+            oamp_version="1.3.1",
+            user_id="user-1",
+            category=KnowledgeCategory.fact,
+            content="Factory cell learned a mediated deployment preference.",
+            confidence=0.86,
+            source=KnowledgeSource(
+                session_id="sess-cell-42",
+                agent_id="cell-agent-42",
+                timestamp=datetime(2026, 5, 31, 12, 0, 0, tzinfo=timezone.utc),
+            ),
+            provenance=Provenance(
+                sources=[
+                    ProvenanceSource(
+                        session_id="sess-cell-42",
+                        timestamp=datetime(2026, 5, 31, 12, 0, 0, tzinfo=timezone.utc),
+                        agent_id="cell-agent-42",
+                        turn_id="turn-7",
+                        task_id="task-7",
+                        context_id="mission-3",
+                    )
+                ],
+                derived=False,
+            ),
+            governance=Governance(
+                sensitivity_class="confidential",
+                labels=["work.deployment"],
+                handling=GovernanceHandling(
+                    retrieval="governed",
+                    export="governed",
+                    stream="governed",
+                    mediation="required",
+                ),
+            ),
+        )
+        parsed = KnowledgeEntry.model_validate_json(entry.model_dump_json(exclude_none=True))
+        assert parsed.oamp_version == "1.3.1"
+        assert parsed.governance.handling.mediation == "required"
+        assert parsed.provenance.sources[0].task_id == "task-7"
+        assert parsed.provenance.sources[0].context_id == "mission-3"
+        assert validate_knowledge_entry(parsed) == []
+
 
 class TestKnowledgeStore:
     """Tests for KnowledgeStore creation and serialization."""

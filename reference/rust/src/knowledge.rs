@@ -29,6 +29,10 @@ pub struct ProvenanceSource {
     pub agent_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub turn_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +49,13 @@ pub enum GovernanceHandlingMode {
     Ungoverned,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GovernanceMediationMode {
+    Required,
+    Optional,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GovernanceHandling {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -53,6 +64,8 @@ pub struct GovernanceHandling {
     pub export: Option<GovernanceHandlingMode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<GovernanceHandlingMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mediation: Option<GovernanceMediationMode>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

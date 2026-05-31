@@ -37,12 +37,13 @@ defmodule OampTypes.Knowledge do
     @moduledoc """
     Surface-specific handling hints for governed memory.
     """
-    defstruct [:retrieval, :export, :stream]
+    defstruct [:retrieval, :export, :stream, :mediation]
 
     @type t :: %__MODULE__{
       retrieval: String.t() | nil,
       export: String.t() | nil,
-      stream: String.t() | nil
+      stream: String.t() | nil,
+      mediation: String.t() | nil
     }
   end
 
@@ -65,13 +66,15 @@ defmodule OampTypes.Knowledge do
     Extended lineage record for multi-source provenance.
     """
     @enforce_keys [:session_id, :timestamp]
-    defstruct [:session_id, :agent_id, :timestamp, :turn_id]
+    defstruct [:session_id, :agent_id, :timestamp, :turn_id, :task_id, :context_id]
 
     @type t :: %__MODULE__{
       session_id: String.t(),
       agent_id: String.t() | nil,
       timestamp: String.t(),
-      turn_id: String.t() | nil
+      turn_id: String.t() | nil,
+      task_id: String.t() | nil,
+      context_id: String.t() | nil
     }
   end
 
@@ -201,7 +204,9 @@ defmodule OampTypes.Knowledge do
                     session_id: source["session_id"],
                     agent_id: source["agent_id"],
                     timestamp: source["timestamp"],
-                    turn_id: source["turn_id"]
+                    turn_id: source["turn_id"],
+                    task_id: source["task_id"],
+                    context_id: source["context_id"]
                   }
                 end)
             }
@@ -218,7 +223,8 @@ defmodule OampTypes.Knowledge do
                   %GovernanceHandling{
                     retrieval: h["retrieval"],
                     export: h["export"],
-                    stream: h["stream"]
+                    stream: h["stream"],
+                    mediation: h["mediation"]
                   }
               end
 
@@ -374,6 +380,7 @@ defmodule OampTypes.Knowledge do
       fields = if handling.retrieval, do: Map.put(fields, "retrieval", handling.retrieval), else: fields
       fields = if handling.export, do: Map.put(fields, "export", handling.export), else: fields
       fields = if handling.stream, do: Map.put(fields, "stream", handling.stream), else: fields
+      fields = if handling.mediation, do: Map.put(fields, "mediation", handling.mediation), else: fields
       Jason.Encode.map(fields, opts)
     end
   end
@@ -396,6 +403,8 @@ defmodule OampTypes.Knowledge do
 
       fields = if source.agent_id, do: Map.put(fields, "agent_id", source.agent_id), else: fields
       fields = if source.turn_id, do: Map.put(fields, "turn_id", source.turn_id), else: fields
+      fields = if source.task_id, do: Map.put(fields, "task_id", source.task_id), else: fields
+      fields = if source.context_id, do: Map.put(fields, "context_id", source.context_id), else: fields
       Jason.Encode.map(fields, opts)
     end
   end

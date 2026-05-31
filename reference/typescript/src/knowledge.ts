@@ -14,6 +14,8 @@ export const ProvenanceSource = z.object({
   agent_id: z.string().optional(),
   timestamp: z.string().datetime(),
   turn_id: z.string().optional(),
+  task_id: z.string().optional(),
+  context_id: z.string().optional(),
 });
 export type ProvenanceSource = z.infer<typeof ProvenanceSource>;
 
@@ -27,6 +29,7 @@ export const GovernanceHandling = z.object({
   retrieval: z.enum(['governed', 'ungoverned']).optional(),
   export: z.enum(['governed', 'ungoverned']).optional(),
   stream: z.enum(['governed', 'ungoverned']).optional(),
+  mediation: z.enum(['required', 'optional']).optional(),
 });
 export type GovernanceHandling = z.infer<typeof GovernanceHandling>;
 
@@ -43,7 +46,7 @@ export const KnowledgeDecay = z.object({
 });
 
 export const KnowledgeEntry = z.object({
-  oamp_version: z.enum(['1.0.0', '1.1.0', '1.2.0', '1.3.0']),
+  oamp_version: z.enum(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.3.1']),
   type: z.literal('knowledge_entry'),
   id: z.string().uuid(),
   user_id: z.string().min(1),
@@ -60,7 +63,7 @@ export const KnowledgeEntry = z.object({
 export type KnowledgeEntry = z.infer<typeof KnowledgeEntry>;
 
 export const KnowledgeStore = z.object({
-  oamp_version: z.enum(['1.0.0', '1.1.0', '1.2.0', '1.3.0']),
+  oamp_version: z.enum(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.3.1']),
   type: z.literal('knowledge_store'),
   user_id: z.string().min(1),
   entries: z.array(KnowledgeEntry),

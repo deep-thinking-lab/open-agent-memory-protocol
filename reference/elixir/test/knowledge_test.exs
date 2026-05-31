@@ -89,6 +89,53 @@ defmodule OampTypes.KnowledgeTest do
       assert decoded.governance.sensitivity_class == "internal"
       assert hd(decoded.provenance.sources).turn_id == "turn-1"
     end
+
+    test "encodes and decodes v1.3.1 mediation and factory provenance fields" do
+      entry = %Entry{
+        oamp_version: "1.3.1",
+        id: "8f6ec84e-17f5-4dc2-a8c3-f056d3124925",
+        user_id: "user-123",
+        category: :fact,
+        content: "Factory cell learned a mediated deployment preference.",
+        confidence: 0.86,
+        source: %Source{
+          session_id: "sess-cell-42",
+          agent_id: "cell-agent-42",
+          timestamp: "2026-05-31T12:00:00Z"
+        },
+        provenance: %Provenance{
+          sources: [
+            %ProvenanceSource{
+              session_id: "sess-cell-42",
+              agent_id: "cell-agent-42",
+              timestamp: "2026-05-31T12:00:00Z",
+              turn_id: "turn-7",
+              task_id: "task-7",
+              context_id: "mission-3"
+            }
+          ],
+          derived: false
+        },
+        governance: %Governance{
+          sensitivity_class: "confidential",
+          labels: ["work.deployment"],
+          handling: %GovernanceHandling{
+            retrieval: "governed",
+            export: "governed",
+            stream: "governed",
+            mediation: "required"
+          }
+        }
+      }
+
+      json = Entry.to_json(entry)
+      decoded = Entry.from_json(json)
+
+      assert decoded.oamp_version == "1.3.1"
+      assert decoded.governance.handling.mediation == "required"
+      assert hd(decoded.provenance.sources).task_id == "task-7"
+      assert hd(decoded.provenance.sources).context_id == "mission-3"
+    end
   end
 
   describe "spec example parsing" do

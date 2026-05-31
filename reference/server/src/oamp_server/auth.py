@@ -13,7 +13,7 @@ from .config import Settings
 
 
 class AgentGrantClaims(BaseModel):
-    """Portable v1.3 grant claims carried in JWT or OAMP-Grant headers."""
+    """Portable v1.3/v1.3.1 grant claims carried in JWT or OAMP-Grant headers."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -24,6 +24,10 @@ class AgentGrantClaims(BaseModel):
     oamp_write_labels: list[str] = Field(default_factory=list)
     oamp_sensitivity_max: Literal["public", "internal", "confidential", "restricted"]
     oamp_export_full: bool = False
+    iss: str | None = None
+    oamp_mediation_required: bool | None = None
+    oamp_task_id: str | None = None
+    oamp_context_id: str | None = None
     exp: int | None = None
 
 

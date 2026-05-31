@@ -170,6 +170,75 @@ func TestGovernedKnowledgeEntryRoundTrip(t *testing.T) {
 	}
 }
 
+func TestV131MediationAndFactoryProvenanceRoundTrip(t *testing.T) {
+	retrieval := "governed"
+	export := "governed"
+	stream := "governed"
+	mediation := "required"
+	agentID := "cell-agent-42"
+	turnID := "turn-7"
+	taskID := "task-7"
+	contextID := "mission-3"
+	derived := false
+	entry := &KnowledgeEntry{
+		OAMPVersion: "1.3.1",
+		Type:        "knowledge_entry",
+		ID:          "8f6ec84e-17f5-4dc2-a8c3-f056d3124925",
+		UserID:      "user-123",
+		Category:    KnowledgeCategoryFact,
+		Content:     "Factory cell learned a mediated deployment preference.",
+		Confidence:  0.86,
+		Source: KnowledgeSource{
+			SessionID: "sess-cell-42",
+			AgentID:   &agentID,
+			Timestamp: parseTime("2026-05-31T12:00:00Z"),
+		},
+		Provenance: &Provenance{
+			Sources: []ProvenanceSource{
+				{
+					SessionID: "sess-cell-42",
+					AgentID:   &agentID,
+					Timestamp: parseTime("2026-05-31T12:00:00Z"),
+					TurnID:    &turnID,
+					TaskID:    &taskID,
+					ContextID: &contextID,
+				},
+			},
+			Derived: &derived,
+		},
+		Governance: &Governance{
+			SensitivityClass: "confidential",
+			Labels:           []string{"work.deployment"},
+			Handling: &GovernanceHandling{
+				Retrieval: &retrieval,
+				Export:    &export,
+				Stream:    &stream,
+				Mediation: &mediation,
+			},
+		},
+	}
+
+	data, err := json.Marshal(entry)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var parsed KnowledgeEntry
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	if parsed.Governance == nil || parsed.Governance.Handling == nil || *parsed.Governance.Handling.Mediation != "required" {
+		t.Fatalf("mediation was not preserved")
+	}
+	if parsed.Provenance == nil || *parsed.Provenance.Sources[0].TaskID != "task-7" || *parsed.Provenance.Sources[0].ContextID != "mission-3" {
+		t.Fatalf("factory provenance context was not preserved")
+	}
+	if errors := ValidateKnowledgeEntry(&parsed); len(errors) != 0 {
+		t.Fatalf("ValidateKnowledgeEntry() errors = %v", errors)
+	}
+}
+
 func TestParseKnowledgeEntryExample(t *testing.T) {
 	data, err := os.ReadFile("../../spec/v1/examples/knowledge-entry.json")
 	if err != nil {

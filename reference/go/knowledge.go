@@ -38,6 +38,8 @@ type ProvenanceSource struct {
 	AgentID   *string   `json:"agent_id,omitempty"`
 	Timestamp time.Time `json:"timestamp"`
 	TurnID    *string   `json:"turn_id,omitempty"`
+	TaskID    *string   `json:"task_id,omitempty"`
+	ContextID *string   `json:"context_id,omitempty"`
 }
 
 type Provenance struct {
@@ -49,6 +51,7 @@ type GovernanceHandling struct {
 	Retrieval *string `json:"retrieval,omitempty"`
 	Export    *string `json:"export,omitempty"`
 	Stream    *string `json:"stream,omitempty"`
+	Mediation *string `json:"mediation,omitempty"`
 }
 
 type Governance struct {

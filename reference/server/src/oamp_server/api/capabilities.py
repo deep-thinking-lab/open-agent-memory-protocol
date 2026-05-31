@@ -13,7 +13,7 @@ async def get_capabilities(request: Request) -> dict[str, object]:
     """Advertise optional OAMP capabilities supported by the reference backend."""
     settings = request.app.state.settings
     return {
-        "oamp_version": "1.3.0",
+        "oamp_version": "1.3.1",
         "capabilities": {
             "streaming": {
                 "supported": False,
@@ -30,7 +30,7 @@ async def get_capabilities(request: Request) -> dict[str, object]:
                 "withheld_stub_support": False,
                 "enforcement": {
                     "supported": settings.governance_enforcement_enabled,
-                    "spec_version": "1.3.0",
+                    "spec_version": "1.3.1",
                     "label_hierarchy": "dotted-prefix",
                     "reserved_top_level_labels": [
                         "identity",
@@ -48,6 +48,11 @@ async def get_capabilities(request: Request) -> dict[str, object]:
                     "existence_hiding": True,
                     "stream_filtering": False,
                     "export_full_supported": True,
+                    "mediation": {
+                        "supported": False,
+                        "trusted_issuers": [],
+                    },
+                    "provenance_query": ["task_id", "context_id"],
                 },
             },
             "user_id_format": {
