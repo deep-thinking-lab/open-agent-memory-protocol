@@ -78,10 +78,16 @@ SHOULD record them in the entry's provenance so attribution survives the agent:
 
 ```json
 {
-  "source": { "agent_id": "cell-agent-42" },
+  "source": {
+    "session_id": "sess-cell-42",
+    "timestamp": "2026-05-31T12:00:00Z",
+    "agent_id": "cell-agent-42"
+  },
   "provenance": {
     "sources": [
       {
+        "session_id": "sess-cell-42",
+        "timestamp": "2026-05-31T12:00:00Z",
         "agent_id": "cell-agent-42",
         "task_id": "task-7",
         "context_id": "mission-3"
@@ -90,6 +96,11 @@ SHOULD record them in the entry's provenance so attribution survives the agent:
   }
 }
 ```
+
+> `session_id` and `timestamp` are REQUIRED on both `source` and each
+> `provenance.sources[*]` entry by the v1.2/v1.3 `knowledge-entry` schema; they
+> are shown here so the example validates. `agent_id`, `task_id`, and
+> `context_id` are the additive fields.
 
 - The backend SHOULD copy `oamp_task_id` → `provenance.sources[*].task_id` and
   `oamp_context_id` → `provenance.sources[*].context_id` for the entry written
@@ -103,18 +114,39 @@ SHOULD record them in the entry's provenance so attribution survives the agent:
 
 A backend MAY support filtering reads by `task_id` / `context_id` (subject to the
 normal v1.3 §5.1 read grant — provenance filters narrow, they never widen).
-Backends that support it SHOULD advertise it in capabilities (v1.3 §6):
+Backends that support it SHOULD advertise it under the v1.3 governance
+enforcement block (v1.3 §6 — `capabilities.governance.enforcement`, with a
+top-level `oamp_version`):
 
 ```json
-{ "governance": { "provenance_query": ["task_id", "context_id"] } }
+{
+  "oamp_version": "1.3.1",
+  "capabilities": {
+    "governance": {
+      "enforcement": {
+        "provenance_query": ["task_id", "context_id"]
+      }
+    }
+  }
+}
 ```
 
-## 6. Reference type additions
+## 6. Required schema & reference-type updates
 
-The `oamp-types` reference libraries SHOULD add the OPTIONAL `task_id` and
-`context_id` fields to the provenance source shape so the additive
-factory-provenance carriage round-trips. This mirrors how v1.2/v1.3 governance
-metadata is already parsed additively.
+The v1.3 `knowledge-entry` schema defines `$defs.provenance_source` (and
+`source`) with **`additionalProperties: false`**, so `task_id` / `context_id`
+are rejected today. This proposal is therefore **not** purely descriptive — it
+requires, normative for v1.3.1:
+
+1. **JSON Schema:** add OPTIONAL `task_id` and `context_id` (string) to the
+   v1.3.1 `knowledge-entry` schema's `provenance_source` definition. Without
+   this, a writer following the §4 SHOULD emits a **schema-invalid** entry.
+2. **Reference types:** add the same OPTIONAL fields to the `oamp-types`
+   provenance-source shape (Rust/TS/Python/Go/Elixir) so the additive carriage
+   round-trips, mirroring how v1.2/v1.3 governance metadata is parsed additively.
+
+`session_id` / `timestamp` remain REQUIRED on `provenance_source`; the new
+fields are additive and OPTIONAL.
 
 ## 7. Backwards compatibility
 
