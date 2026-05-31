@@ -1,4 +1,5 @@
 {
+  "iss": "governor",
   "sub": "user-123",
   "oamp_agent_id": "coding-assistant-v9",
   "oamp_grant_id": "grant-2026-05-07-001",
@@ -12,5 +13,8 @@
   ],
   "oamp_sensitivity_max": "internal",
   "oamp_export_full": false,
+  "oamp_mediation_required": true,
+  "oamp_task_id": "task-7",
+  "oamp_context_id": "mission-3",
   "exp": 1746662400
 }

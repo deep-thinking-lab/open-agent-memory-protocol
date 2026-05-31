@@ -59,6 +59,16 @@ describe('KnowledgeEntry validation', () => {
     expect(entry.oamp_version).toBe('1.3.0');
     expect(entry.governance?.labels).toContain('work.code');
   });
+
+  it('round-trips v1.3.1 mediation and factory provenance fields', () => {
+    const json = fs.readFileSync(path.join(__dirname, '../../../../validators/test-fixtures/valid/v1.3.1-knowledge-entry.json'), 'utf-8');
+    const entry = KnowledgeEntry.parse(JSON.parse(json));
+
+    expect(entry.oamp_version).toBe('1.3.1');
+    expect(entry.governance?.handling?.mediation).toBe('required');
+    expect(entry.provenance?.sources[0].task_id).toBe('task-7');
+    expect(entry.provenance?.sources[0].context_id).toBe('mission-3');
+  });
 });
 
 describe('UserModel validation', () => {

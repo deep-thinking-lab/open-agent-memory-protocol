@@ -63,6 +63,7 @@ class GovernanceHandling(BaseModel):
     retrieval: Optional[Literal["governed", "ungoverned"]] = None
     export: Optional[Literal["governed", "ungoverned"]] = None
     stream: Optional[Literal["governed", "ungoverned"]] = None
+    mediation: Optional[Literal["required", "optional"]] = None
 
 
 class Governance(BaseModel):
@@ -84,6 +85,8 @@ class ProvenanceSource(BaseModel):
     timestamp: datetime
     agent_id: Optional[str] = None
     turn_id: Optional[str] = None
+    task_id: Optional[str] = None
+    context_id: Optional[str] = None
 
     @field_validator("session_id")
     @classmethod
@@ -131,8 +134,8 @@ class KnowledgeEntry(BaseModel):
     @field_validator("oamp_version")
     @classmethod
     def oamp_version_must_be_current(cls, v: str) -> str:
-        if v not in {"1.0.0", "1.1.0", "1.2.0", "1.3.0"}:
-            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', '1.2.0', or '1.3.0', got '{v}'")
+        if v not in {"1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.3.1"}:
+            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', '1.2.0', '1.3.0', or '1.3.1', got '{v}'")
         return v
 
     @field_validator("type")
@@ -180,8 +183,8 @@ class KnowledgeStore(BaseModel):
     @field_validator("oamp_version")
     @classmethod
     def oamp_version_must_be_current(cls, v: str) -> str:
-        if v not in {"1.0.0", "1.1.0", "1.2.0", "1.3.0"}:
-            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', '1.2.0', or '1.3.0', got '{v}'")
+        if v not in {"1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.3.1"}:
+            raise ValueError(f"oamp_version must be one of '1.0.0', '1.1.0', '1.2.0', '1.3.0', or '1.3.1', got '{v}'")
         return v
 
     @field_validator("type")

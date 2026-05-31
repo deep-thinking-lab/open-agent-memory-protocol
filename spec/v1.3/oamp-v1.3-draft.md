@@ -154,9 +154,14 @@ The v1.2 `handling` hints become load-bearing in v1.3:
 - `export: "ungoverned"` exempts the entry from export-path filtering
 - `stream: "governed"` means v1.1 streaming paths MUST apply grant filtering
 - `stream: "ungoverned"` exempts the entry from stream filtering
+- `mediation: "required"` means access to the entry requires a valid grant from
+  a trusted mediation issuer
+- `mediation: "optional"` means no mediation constraint is expressed
 
 When `governance` is present and a handling value is omitted, the effective
 default is `governed` for that surface.
+
+When `mediation` is omitted, the effective default is `optional`.
 
 ---
 
@@ -168,6 +173,7 @@ When bearer authentication uses JWT, the token carries these additional claims:
 
 ```json
 {
+  "iss": "governor",
   "sub": "user-abc",
   "oamp_agent_id": "medical-assistant-v3",
   "oamp_grant_id": "grant-2026-05-07-001",
@@ -175,6 +181,9 @@ When bearer authentication uses JWT, the token carries these additional claims:
   "oamp_write_labels": ["health", "preferences"],
   "oamp_sensitivity_max": "restricted",
   "oamp_export_full": false,
+  "oamp_mediation_required": true,
+  "oamp_task_id": "task-7",
+  "oamp_context_id": "mission-3",
   "exp": 1746662400
 }
 ```
@@ -187,6 +196,10 @@ When bearer authentication uses JWT, the token carries these additional claims:
 | `oamp_write_labels` | MUST | Labels the agent may write |
 | `oamp_sensitivity_max` | MUST | Highest readable/writable sensitivity class |
 | `oamp_export_full` | MAY | Whether full unfiltered export is authorized |
+| `iss` | MUST for mediation-required resources; otherwise MAY | Stable identifier of the authority that minted the grant |
+| `oamp_mediation_required` | MAY | Signals that this grant is intended for a mediated flow |
+| `oamp_task_id` | MAY | Identifier of the unit of work the agent was provisioned to perform |
+| `oamp_context_id` | MAY | Opaque grouping identifier above the task |
 
 Empty `oamp_read_labels` means read-nothing.
 
@@ -204,6 +217,12 @@ When a write happens under a v1.3 grant, the backend MUST verify:
 
 For entries with `provenance.sources[*].agent_id`, backends SHOULD validate each
 listed `agent_id` against the calling grant or their local trust model.
+
+When a write happens under a v1.3.1 grant carrying `oamp_task_id` or
+`oamp_context_id`, the backend SHOULD stamp those values onto
+`provenance.sources[*].task_id` and `provenance.sources[*].context_id` for the
+source produced by that grant. These fields are descriptive attribution only and
+MUST NOT widen access.
 
 ---
 
@@ -270,7 +289,7 @@ v1.3 extends the v1.2 governance capabilities block:
 
 ```json
 {
-  "oamp_version": "1.3.0",
+  "oamp_version": "1.3.1",
   "capabilities": {
     "governance": {
       "supported": true,
@@ -280,7 +299,7 @@ v1.3 extends the v1.2 governance capabilities block:
       "withheld_stub_support": false,
       "enforcement": {
         "supported": true,
-        "spec_version": "1.3.0",
+        "spec_version": "1.3.1",
         "label_hierarchy": "dotted-prefix",
         "reserved_top_level_labels": [
           "identity", "location", "health", "finance",
@@ -290,7 +309,12 @@ v1.3 extends the v1.2 governance capabilities block:
         "grant_transport": ["jwt-claims", "oamp-grant-header"],
         "existence_hiding": true,
         "stream_filtering": true,
-        "export_full_supported": true
+        "export_full_supported": true,
+        "mediation": {
+          "supported": true,
+          "trusted_issuers": ["governor"]
+        },
+        "provenance_query": ["task_id", "context_id"]
       }
     }
   }
@@ -307,6 +331,8 @@ v1.3 extends the v1.2 governance capabilities block:
 | `enforcement.existence_hiding` | boolean | MUST | Whether out-of-scope ids are hidden as 404 |
 | `enforcement.stream_filtering` | boolean | MUST | Whether v1.1 streams are filtered |
 | `enforcement.export_full_supported` | boolean | MUST | Whether full export claims are honored |
+| `enforcement.mediation` | object | MAY | Mediation support and trusted issuer identifiers |
+| `enforcement.provenance_query` | array of string | MAY | Supported provenance-context filters (`task_id`, `context_id`) |
 
 ---
 

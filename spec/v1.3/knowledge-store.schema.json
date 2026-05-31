@@ -8,8 +8,8 @@
   "properties": {
     "oamp_version": {
       "type": "string",
-      "enum": ["1.0.0", "1.1.0", "1.2.0", "1.3.0"],
-      "description": "OAMP spec version. Use '1.2.0' or '1.3.0' when any entry exercises governed-memory fields."
+      "enum": ["1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.3.1"],
+      "description": "OAMP spec version. Use '1.2.0', '1.3.0', or '1.3.1' when any entry exercises governed-memory fields."
     },
     "type": {
       "type": "string",
@@ -58,7 +58,7 @@
       "properties": {
         "oamp_version": {
           "type": "string",
-          "enum": ["1.0.0", "1.1.0", "1.2.0", "1.3.0"]
+          "enum": ["1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.3.1"]
         },
         "type": {
           "type": "string",
@@ -150,6 +150,10 @@
                 "stream": {
                   "type": "string",
                   "enum": ["governed", "ungoverned"]
+                },
+                "mediation": {
+                  "type": "string",
+                  "enum": ["required", "optional"]
                 }
               },
               "additionalProperties": false
@@ -200,6 +204,12 @@
           "type": "string"
         },
         "turn_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "context_id": {
           "type": "string"
         }
       },

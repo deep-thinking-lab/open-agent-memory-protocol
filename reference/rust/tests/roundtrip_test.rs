@@ -52,6 +52,7 @@ fn test_governed_knowledge_entry_roundtrip() {
             retrieval: Some(GovernanceHandlingMode::Governed),
             export: Some(GovernanceHandlingMode::Governed),
             stream: None,
+            mediation: None,
         }),
     });
     entry.provenance = Some(Provenance {
@@ -60,6 +61,8 @@ fn test_governed_knowledge_entry_roundtrip() {
             timestamp: chrono::Utc::now(),
             agent_id: None,
             turn_id: Some("turn-1".to_string()),
+            task_id: None,
+            context_id: None,
         }],
         derived: Some(false),
     });
@@ -72,6 +75,58 @@ fn test_governed_knowledge_entry_roundtrip() {
         parsed.provenance.unwrap().sources[0].turn_id.as_deref(),
         Some("turn-1")
     );
+}
+
+#[test]
+fn test_v131_mediation_and_factory_provenance_roundtrip() {
+    let mut entry = KnowledgeEntry::new(
+        "user-1",
+        KnowledgeCategory::Fact,
+        "Factory cell learned a mediated deployment preference",
+        0.86,
+        "sess-cell-42",
+    );
+    entry.oamp_version = "1.3.1".to_string();
+    entry.governance = Some(Governance {
+        sensitivity_class: "confidential".to_string(),
+        labels: vec!["work.deployment".into()],
+        handling: Some(GovernanceHandling {
+            retrieval: Some(GovernanceHandlingMode::Governed),
+            export: Some(GovernanceHandlingMode::Governed),
+            stream: Some(GovernanceHandlingMode::Governed),
+            mediation: Some(GovernanceMediationMode::Required),
+        }),
+    });
+    entry.provenance = Some(Provenance {
+        sources: vec![ProvenanceSource {
+            session_id: "sess-cell-42".to_string(),
+            timestamp: chrono::Utc::now(),
+            agent_id: Some("cell-agent-42".to_string()),
+            turn_id: Some("turn-7".to_string()),
+            task_id: Some("task-7".to_string()),
+            context_id: Some("mission-3".to_string()),
+        }],
+        derived: Some(false),
+    });
+
+    let json = serde_json::to_string_pretty(&entry).unwrap();
+    assert!(json.contains("\"mediation\": \"required\""));
+    assert!(json.contains("\"task_id\": \"task-7\""));
+    assert!(json.contains("\"context_id\": \"mission-3\""));
+
+    let parsed: KnowledgeEntry = serde_json::from_str(&json).unwrap();
+    let handling = parsed
+        .governance
+        .as_ref()
+        .unwrap()
+        .handling
+        .as_ref()
+        .unwrap();
+    assert_eq!(handling.mediation, Some(GovernanceMediationMode::Required));
+    let source = &parsed.provenance.as_ref().unwrap().sources[0];
+    assert_eq!(source.task_id.as_deref(), Some("task-7"));
+    assert_eq!(source.context_id.as_deref(), Some("mission-3"));
+    assert!(validate::validate_knowledge_entry(&parsed).is_ok());
 }
 
 #[test]

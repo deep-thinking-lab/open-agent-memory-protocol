@@ -1,5 +1,5 @@
 {
-  "oamp_version": "1.3.0",
+  "oamp_version": "1.3.1",
   "capabilities": {
     "streaming": {
       "supported": true,
@@ -26,7 +26,7 @@
       "withheld_stub_support": false,
       "enforcement": {
         "supported": true,
-        "spec_version": "1.3.0",
+        "spec_version": "1.3.1",
         "label_hierarchy": "dotted-prefix",
         "reserved_top_level_labels": [
           "identity",
@@ -46,7 +46,17 @@
         ],
         "existence_hiding": true,
         "stream_filtering": true,
-        "export_full_supported": true
+        "export_full_supported": true,
+        "mediation": {
+          "supported": true,
+          "trusted_issuers": [
+            "governor"
+          ]
+        },
+        "provenance_query": [
+          "task_id",
+          "context_id"
+        ]
       }
     },
     "user_id_format": {

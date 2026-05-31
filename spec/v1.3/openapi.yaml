@@ -8,7 +8,7 @@ info:
 
     Endpoints and response shapes not repeated here inherit their definitions
     from `spec/v1/openapi.yaml`.
-  version: "1.3.0-draft"
+  version: "1.3.1-draft"
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -162,7 +162,7 @@ components:
       properties:
         oamp_version:
           type: string
-          enum: ["1.1.0", "1.2.0", "1.3.0"]
+          enum: ["1.1.0", "1.2.0", "1.3.0", "1.3.1"]
           description: Highest OAMP minor version advertised by the backend.
         capabilities:
           $ref: '#/components/schemas/Capabilities'
@@ -268,7 +268,7 @@ components:
           type: boolean
         spec_version:
           type: string
-          enum: ["1.3.0"]
+          enum: ["1.3.0", "1.3.1"]
         label_hierarchy:
           type: string
           enum: ["dotted-prefix"]
@@ -287,6 +287,27 @@ components:
           type: boolean
         export_full_supported:
           type: boolean
+        mediation:
+          $ref: '#/components/schemas/MediationCapabilities'
+        provenance_query:
+          type: array
+          items:
+            type: string
+            enum: ["task_id", "context_id"]
+          description: Optional provenance-context filters supported by the backend.
+      additionalProperties: false
+
+    MediationCapabilities:
+      type: object
+      required: [supported]
+      properties:
+        supported:
+          type: boolean
+        trusted_issuers:
+          type: array
+          items:
+            type: string
+          description: Trusted issuer identifiers only; key material is never advertised.
       additionalProperties: false
 
     UserIdFormat:
