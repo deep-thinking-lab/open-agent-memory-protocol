@@ -20,7 +20,7 @@ jobs:
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@droid')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@droid') || contains(github.event.issue.title, '@droid'))) ||
       (github.event_name == 'pull_request' && (contains(github.event.pull_request.body, '@droid') || contains(github.event.pull_request.title, '@droid')))
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, droid-agent]
     permissions:
       contents: read
       pull-requests: write
@@ -31,8 +31,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
+          persist-credentials: false
           fetch-depth: 1
       - name: Run Droid Exec
-        uses: Factory-AI/droid-action@main
+        uses: Factory-AI/droid-action@8ea31f351ee6636ebef918ccb64682f477af7184
         with:
           factory_api_key: ${{ secrets.FACTORY_API_KEY }}

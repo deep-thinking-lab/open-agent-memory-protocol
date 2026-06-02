@@ -17,11 +17,13 @@ env:
 jobs:
   test:
     name: Run tests before release
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -72,10 +74,12 @@ jobs:
   publish-rust:
     name: Publish Rust crate
     needs: test
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -89,10 +93,12 @@ jobs:
   publish-npm:
     name: Publish npm package
     needs: test
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -114,10 +120,12 @@ jobs:
   publish-pypi:
     name: Publish Python package
     needs: test
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -142,10 +150,12 @@ jobs:
   publish-elixir:
     name: Publish Elixir package
     needs: test
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -161,10 +171,12 @@ jobs:
   create-github-release:
     name: Create GitHub Release
     needs: test
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
