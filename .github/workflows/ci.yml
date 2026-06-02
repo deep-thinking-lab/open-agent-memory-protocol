@@ -20,12 +20,14 @@ jobs:
 
   test-rust:
     name: Rust
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Cache Rust artifacts
         uses: actions/cache@v5
@@ -45,12 +47,14 @@ jobs:
 
   test-typescript:
     name: TypeScript
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -78,7 +82,7 @@ jobs:
 
   test-python:
     name: Python ${{ matrix.python-version }}
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     strategy:
@@ -89,6 +93,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }} via mise
         uses: jdx/mise-action@v4
@@ -119,12 +125,14 @@ jobs:
 
   test-go:
     name: Go
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -150,12 +158,14 @@ jobs:
 
   test-elixir:
     name: Elixir
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -186,12 +196,14 @@ jobs:
 
   test-server:
     name: Reference Server
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -224,13 +236,15 @@ jobs:
 
   interop-canary:
     name: Interop canary (reference server self-loopback)
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     needs: [test-server]
     timeout-minutes: 10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4
@@ -306,7 +320,7 @@ jobs:
 
   cross-language-check:
     name: Cross-language consistency
-    runs-on: [self-hosted, Linux, X64, kizuna-stage-1]
+    runs-on: [self-hosted, Linux, X64, voxeltron-ci]
     # Only require what reliably runs on this runner today. The TS/Go/Elixir/
     # Python-matrix jobs fail on toolchain or setup-python issues that need
     # runner-side fixes; including them here would skip this check on every
@@ -318,6 +332,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up toolchains via mise
         uses: jdx/mise-action@v4

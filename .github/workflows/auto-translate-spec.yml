@@ -30,6 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0  # auto-translate.py reads git log timestamps
 
       - name: Set up Python
