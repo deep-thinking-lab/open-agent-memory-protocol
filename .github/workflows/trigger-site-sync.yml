@@ -9,7 +9,7 @@ on:
 
 jobs:
   trigger:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, build-hetzner]
     steps:
       - name: Trigger dthink.ai sync
         run: |
